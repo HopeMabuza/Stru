@@ -1,0 +1,17 @@
+# Secrets
+.env
+keypairs/
+
+# Rust / Anchor
+target/
+**/.anchor/
+.anchor/
+
+# Node
+node_modules/
+dist/
+.next/
+
+# OS
+.DS_Store
+Thumbs.db
