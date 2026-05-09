@@ -9,7 +9,7 @@ import poolRoutes from './routes/pool';
 import userRoutes from './routes/users';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT || 4000);
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +23,6 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`Stru backend running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Stru backend running on port ${PORT}`);
 });
