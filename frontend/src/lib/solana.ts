@@ -13,6 +13,7 @@ const PROGRAM_ID = new PublicKey("JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y")
 const USDC_MINT = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
 const USDC_DECIMALS = 6;
 const POOL_STAKE_OFFSET = 8 + 32 + 32;
+const MIN_CREATE_SOL_LAMPORTS = 20_000_000;
 const MIN_JOIN_SOL_LAMPORTS = 5_000_000;
 const textEncoder = new TextEncoder();
 
@@ -68,6 +69,10 @@ function getParticipantPda(poolPda: PublicKey, wallet: PublicKey): PublicKey {
 
 function usdcToLamports(usdc: number): anchor.BN {
   return new anchor.BN(Math.round(usdc * 10 ** USDC_DECIMALS));
+}
+
+function usdcToLamportsBigInt(usdc: number): bigint {
+  return BigInt(Math.round(usdc * 10 ** USDC_DECIMALS));
 }
 
 function formatUsdcLamports(lamports: bigint): string {

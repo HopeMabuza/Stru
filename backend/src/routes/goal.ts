@@ -97,7 +97,7 @@ router.post('/create', async (req: Request, res: Response) => {
         stake_amount,
         budget: stake_amount * 0.1,
         deadline: deadline.toISOString(),
-        status: 'active',
+        status: 'pending_onchain',
         creator_id: creatorId,
       })
       .select()
