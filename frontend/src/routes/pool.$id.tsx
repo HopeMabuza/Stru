@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WalletButton } from "@/components/WalletButton";
 import { PoolDashboard } from "@/components/PoolDashboard";
 import { ProofSubmit } from "@/components/ProofSubmit";
 import { ClaimButton } from "@/components/ClaimButton";
@@ -56,9 +57,7 @@ function PoolPage() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium">
             <ArrowLeft className="size-4" /> Back
           </Link>
-          <span className="font-mono text-xs text-foreground/60">
-            wallet · {shortWallet(wallet)}
-          </span>
+          <WalletButton variant="cream" />
         </div>
       </header>
 
@@ -78,6 +77,7 @@ function PoolPage() {
 
         {pool && (
           <>
+            <p className="font-mono text-xs text-foreground/60">wallet · {shortWallet(wallet)}</p>
             <PoolDashboard
               pool={pool}
               participants={participants}

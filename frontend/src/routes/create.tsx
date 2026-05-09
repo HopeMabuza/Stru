@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GoalChat } from "@/components/GoalChat";
+import { WalletButton } from "@/components/WalletButton";
 import { api, type Goal } from "@/lib/api";
 import { useWallet } from "@/lib/wallet";
 
@@ -64,9 +65,7 @@ function CreatePage() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium">
             <ArrowLeft className="size-4" /> Back
           </Link>
-          <span className="font-mono text-xs text-foreground/60">
-            wallet · {shortWallet(wallet)}
-          </span>
+          <WalletButton variant="cream" />
         </div>
       </header>
 
@@ -78,6 +77,9 @@ function CreatePage() {
           <p className="mt-2 text-foreground/70">
             Talk to the coach until the goal is concrete and verifiable. Then lock in the stake,
             deadline, and proof rules for everyone joining.
+          </p>
+          <p className="mt-2 font-mono text-xs text-foreground/60">
+            wallet · {shortWallet(wallet)}
           </p>
           <div className="mt-6">
             <GoalChat onGoalReady={setGoal} />
@@ -133,6 +135,11 @@ function CreatePage() {
               {creating ? "Creating..." : "Create pool"}
             </Button>
           </div>
+          {!wallet && (
+            <p className="mt-3 text-xs text-foreground/60">
+              Connect Phantom before creating the pool so it can be tied to your wallet.
+            </p>
+          )}
 
           {error && (
             <div className="mt-3 rounded-md border-2 border-coral bg-coral/10 px-3 py-2 text-sm text-coral">

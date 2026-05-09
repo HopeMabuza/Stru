@@ -16,6 +16,7 @@ import {
 import skyClouds from "@/assets/sky-clouds.jpg";
 import brickWall from "@/assets/brick-wall.jpg";
 import bubblegum from "@/assets/bubblegum.jpg";
+import { WalletButton } from "@/components/WalletButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -64,6 +65,7 @@ function Nav() {
           </a>
         </nav>
         <div className="flex items-center gap-2">
+          <WalletButton variant="cream" className="hidden md:inline-flex" />
           <Link to="/dashboard" className="hidden sm:inline-flex">
             <Button variant="hero" size="default">
               Launch app <ArrowRight />

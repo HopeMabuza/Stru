@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WalletButton } from "@/components/WalletButton";
 import { api, type PoolRow } from "@/lib/api";
 import { useWallet } from "@/lib/wallet";
 
@@ -37,7 +38,10 @@ function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!wallet) return;
+    if (!wallet) {
+      setPools(null);
+      return;
+    }
     api
       .listPools(wallet)
       .then(setPools)
@@ -51,11 +55,14 @@ function DashboardPage() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium">
             <ArrowLeft className="size-4" /> Back
           </Link>
-          <Link to="/create">
-            <Button variant="hero" size="default">
-              <Plus /> New pool
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <WalletButton variant="cream" />
+            <Link to="/create">
+              <Button variant="hero" size="default">
+                <Plus /> New pool
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -69,7 +76,21 @@ function DashboardPage() {
           </div>
         )}
 
-        {pools === null && !error && (
+        {!wallet && !error && (
+          <div className="mt-8 rounded-2xl border-2 border-ink bg-cream p-8 text-center shadow-brutal-sm">
+            <p className="font-display text-2xl font-extrabold">
+              Connect Phantom to see your pools.
+            </p>
+            <p className="mt-1 text-sm text-foreground/65">
+              Your dashboard is keyed by your Solana wallet address.
+            </p>
+            <div className="mt-4">
+              <WalletButton />
+            </div>
+          </div>
+        )}
+
+        {wallet && pools === null && !error && (
           <div className="mt-6 grid gap-4 md:grid-cols-2" aria-label="Loading pools">
             {[0, 1].map((n) => (
               <div
@@ -80,7 +101,7 @@ function DashboardPage() {
           </div>
         )}
 
-        {pools && pools.length === 0 && (
+        {wallet && pools && pools.length === 0 && (
           <div className="mt-8 rounded-2xl border-2 border-dashed border-ink/40 bg-cream p-8 text-center">
             <p className="font-display text-2xl font-extrabold">No pools yet.</p>
             <p className="mt-1 text-sm text-foreground/65">

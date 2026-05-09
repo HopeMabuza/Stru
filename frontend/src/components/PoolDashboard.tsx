@@ -123,7 +123,11 @@ export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) 
       {!joined && !expired && pool.status === "active" && (
         <div className="mt-6">
           <Button variant="hero" disabled={joining || !wallet} onClick={join}>
-            {joining ? "Joining..." : `Join & stake ${formatUsdc(pool.stake_amount)} USDC`}
+            {!wallet
+              ? "Connect Phantom to join"
+              : joining
+                ? "Joining..."
+                : `Join & stake ${formatUsdc(pool.stake_amount)} USDC`}
           </Button>
         </div>
       )}
