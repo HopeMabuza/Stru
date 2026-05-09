@@ -9,16 +9,28 @@ import { TOKEN_PROGRAM_ID, getAccount, getAssociatedTokenAddressSync } from "@so
 import * as anchor from "@coral-xyz/anchor";
 import IDL from "./stru_idl.json";
 
-const PROGRAM_ID = new PublicKey("JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y");
-// Update this after running: POST /faucet/setup
-const USDC_MINT = new PublicKey("9kPfQwG5T2vBeWcBMjHSYu6iPGpkHfQxFPA3jQUCDVMi");
+function envOrFallback(value: unknown, fallback: string): string {
+  const raw = typeof value === "string" ? value.trim() : "";
+  return raw || fallback;
+}
+
+const PROGRAM_ID = new PublicKey(
+  envOrFallback(import.meta.env.VITE_PROGRAM_ID, "JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y"),
+);
+const USDC_MINT = new PublicKey(
+  envOrFallback(import.meta.env.VITE_USDC_MINT_ADDRESS, "9kPfQwG5T2vBeWcBMjHSYu6iPGpkHfQxFPA3jQUCDVMi"),
+);
+const SOLANA_RPC_URL = envOrFallback(
+  import.meta.env.VITE_SOLANA_RPC_URL,
+  "https://api.devnet.solana.com",
+);
 const USDC_DECIMALS = 6;
 const POOL_STAKE_OFFSET = 8 + 32 + 32;
 const MIN_CREATE_SOL_LAMPORTS = 20_000_000;
 const MIN_JOIN_SOL_LAMPORTS = 5_000_000;
 const textEncoder = new TextEncoder();
 
-export const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+export const connection = new Connection(SOLANA_RPC_URL, "confirmed");
 
 function parsePublicKey(value: string, label: string): PublicKey {
   const normalized = value?.trim();
@@ -105,7 +117,10 @@ function simulationMessage(logs?: string[] | null): string | null {
   return null;
 }
 
-const USDC_FAUCET_HINT = `Get devnet USDC at https://faucet.circle.com — make sure to select "Solana Devnet" and use mint ${USDC_MINT.toBase58()}.`;
+const USDC_FAUCET_HINT =
+  `Use the app's "Get 100 Test USDC" button, or mint/send the custom devnet token ` +
+  `${USDC_MINT.toBase58()}. If Phantom shows a balance for a different token mint, ` +
+  "the pool cannot use it.";
 
 async function checkUsdcTokenAccount(
   tokenAccountAddress: PublicKey,

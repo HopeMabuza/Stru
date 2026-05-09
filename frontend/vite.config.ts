@@ -2,6 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
+import path from "node:path";
 import { defineConfig, loadEnv, perEnvironmentPlugin } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
@@ -16,8 +17,10 @@ const clientNodePolyfills = perEnvironmentPlugin("client-node-polyfills", (envir
 );
 
 export default defineConfig(({ command, mode }) => {
+  const rootEnv = loadEnv(mode, path.resolve(process.cwd(), ".."), "VITE_");
+  const frontendEnv = loadEnv(mode, process.cwd(), "VITE_");
   const envDefine = Object.fromEntries(
-    Object.entries(loadEnv(mode, process.cwd(), "VITE_")).map(([key, value]) => [
+    Object.entries({ ...rootEnv, ...frontendEnv }).map(([key, value]) => [
       `import.meta.env.${key}`,
       JSON.stringify(value),
     ]),
