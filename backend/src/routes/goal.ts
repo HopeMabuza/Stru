@@ -57,6 +57,26 @@ router.post('/create', async (req: Request, res: Response) => {
     const goalJson = JSON.stringify(goal);
     const goalHash = Array.from(crypto.createHash('sha256').update(goalJson).digest());
 
+    // Upsert the creator as a user (privy_id stubbed until Privy is wired in)
+    let creatorId: string | null = null;
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('wallet_address', creator_wallet)
+      .maybeSingle();
+
+    if (existingUser) {
+      creatorId = existingUser.id;
+    } else {
+      const { data: newUser, error: userError } = await supabase
+        .from('users')
+        .insert({ wallet_address: creator_wallet, privy_id: `stub_${creator_wallet}` })
+        .select('id')
+        .single();
+      if (userError) throw userError;
+      creatorId = newUser.id;
+    }
+
     // Insert pool into Supabase first to get UUID
     const deadline = new Date(Date.now() + duration_secs * 1000);
     const { data: poolRow, error: dbError } = await supabase
@@ -69,6 +89,7 @@ router.post('/create', async (req: Request, res: Response) => {
         budget: stake_amount * 0.1, // 10% of stake as default verification budget
         deadline: deadline.toISOString(),
         status: 'active',
+        creator_id: creatorId,
       })
       .select()
       .single();
@@ -77,6 +98,11 @@ router.post('/create', async (req: Request, res: Response) => {
 
     const poolId = poolRow.id;
     const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/pool/${poolId}`;
+
+    // Auto-join the creator as a participant
+    await supabase
+      .from('participants')
+      .insert({ pool_id: poolId, wallet_address: creator_wallet, status: 'pending' });
 
     // TODO: call Anchor create_pool instruction here with the oracle keypair
     // For now return the pool_id and invite link so the frontend can proceed
