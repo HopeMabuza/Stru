@@ -1,7 +1,24 @@
 // Typed client for the Stru backend (backend/src/index.ts).
 // Reads VITE_BACKEND_URL from env; falls back to http://localhost:4000.
 
-const BASE = (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? "http://localhost:4000";
+const DEFAULT_BACKEND_URL = "http://localhost:4000";
+
+const BASE = normalizeBackendUrl(import.meta.env.VITE_BACKEND_URL as string | undefined);
+
+function normalizeBackendUrl(value?: string) {
+  const raw = value?.trim();
+  if (!raw) return DEFAULT_BACKEND_URL;
+
+  const withProtocol = /^https?:\/\//i.test(raw)
+    ? raw
+    : raw.startsWith("//")
+      ? `https:${raw}`
+      : /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|\/|$)/i.test(raw)
+        ? `http://${raw}`
+        : `https://${raw}`;
+
+  return withProtocol.replace(/\/+$/, "");
+}
 
 export interface Goal {
   description: string;
@@ -65,6 +82,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     throw new Error(await responseMessage(res));
+  }
+  return jsonResponse<T>(res);
+}
+
+async function jsonResponse<T>(res: Response): Promise<T> {
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    const text = await res.text().catch(() => "");
+    const preview = text.length > 180 ? `${text.slice(0, 180)}...` : text;
+    throw new Error(
+      `Expected JSON from backend at ${res.url}, got ${contentType || "unknown content type"}: ${preview}`,
+    );
   }
   return res.json() as Promise<T>;
 }
@@ -138,6 +167,6 @@ export const api = {
     if (!res.ok) {
       throw new Error(await responseMessage(res));
     }
-    return res.json() as Promise<VerifyResult>;
+    return jsonResponse<VerifyResult>(res);
   },
 };
