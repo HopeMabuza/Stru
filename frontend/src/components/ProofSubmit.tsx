@@ -15,6 +15,17 @@ export function ProofSubmit({ poolId, wallet, onVerdict }: Props) {
   const [verdict, setVerdict] = useState<VerifyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  function chooseFile(next: File | null) {
+    setVerdict(null);
+    setError(null);
+    if (next && next.size > 10 * 1024 * 1024) {
+      setFile(null);
+      setError("Please upload a file under 10 MB.");
+      return;
+    }
+    setFile(next);
+  }
+
   async function submit() {
     if (!file || !wallet) return;
     setSubmitting(true);
@@ -36,20 +47,21 @@ export function ProofSubmit({ poolId, wallet, onVerdict }: Props) {
       <div className="mb-3 text-xs font-bold uppercase tracking-widest text-foreground/60">
         Submit proof
       </div>
+      <p className="mb-4 text-sm text-foreground/65">
+        Upload the clearest image or file that matches the pool's proof rule. The AI verdict and
+        reason will be shown here.
+      </p>
 
       <input
         type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        accept="image/*,application/pdf"
+        onChange={(e) => chooseFile(e.target.files?.[0] ?? null)}
         className="block w-full text-sm file:mr-3 file:rounded-md file:border-2 file:border-ink file:bg-cream file:px-3 file:py-1.5 file:text-sm file:font-bold"
       />
+      {file && <p className="mt-2 font-mono text-xs text-foreground/55">selected · {file.name}</p>}
 
       <div className="mt-4">
-        <Button
-          variant="hero"
-          disabled={!file || submitting || !wallet}
-          onClick={submit}
-        >
+        <Button variant="hero" disabled={!file || submitting || !wallet} onClick={submit}>
           {submitting ? "Verifying..." : "Send to AI referee"}
         </Button>
       </div>
@@ -57,9 +69,7 @@ export function ProofSubmit({ poolId, wallet, onVerdict }: Props) {
       {verdict && (
         <div
           className={`mt-4 rounded-xl border-2 px-4 py-3 text-sm ${
-            verdict.verdict === "pass"
-              ? "border-lime bg-lime/15"
-              : "border-coral bg-coral/10"
+            verdict.verdict === "pass" ? "border-lime bg-lime/15" : "border-coral bg-coral/10"
           }`}
         >
           <div className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wider">
@@ -77,7 +87,7 @@ export function ProofSubmit({ poolId, wallet, onVerdict }: Props) {
           )}
           {typeof verdict.confidence === "number" && (
             <div className="mt-2 font-mono text-[11px] text-foreground/50">
-              conf {verdict.confidence.toFixed(2)}
+              confidence · {Math.round(verdict.confidence * 100)}%
             </div>
           )}
         </div>

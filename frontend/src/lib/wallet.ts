@@ -1,10 +1,6 @@
-// Wallet stub — keeps a deterministic per-browser "wallet address" in
-// localStorage so the rest of the flow (create pool, join, verify, claim)
-// has something to attach activity to.
-//
-// Replace this entire module with Privy embedded-wallet wiring per CLAUDE.md
-// section 5.A once Privy is integrated. The exported surface (getWallet,
-// useWallet) is what the rest of the app consumes — keep those signatures stable.
+// Browser wallet fallback used until the embedded-wallet provider is available.
+// The exported surface stays intentionally small so Privy can replace this module
+// without touching page/component code.
 
 import { useEffect, useState } from "react";
 import { api } from "./api";
@@ -50,7 +46,7 @@ export function useWallet(): string {
   useEffect(() => {
     const w = getWallet();
     setW(w);
-    // Best-effort upsert; ignore failures so the UI still loads offline.
+    // Best-effort user registration; API failures should not block read-only UI.
     api.upsertUser(w).catch(() => {});
   }, []);
   return wallet;

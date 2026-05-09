@@ -46,14 +46,22 @@ function Nav() {
           </div>
           <span className="font-display text-xl font-extrabold tracking-tight">Stru</span>
           <span className="ml-1 hidden rounded-full border border-ink/30 bg-cream px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider sm:inline">
-            devnet
+            beta
           </span>
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-medium md:flex">
-          <a href="#how" className="hover:underline underline-offset-4">How it works</a>
-          <a href="#referee" className="hover:underline underline-offset-4">AI Referee</a>
-          <a href="#mechanic" className="hover:underline underline-offset-4">The pot</a>
-          <a href="#faq" className="hover:underline underline-offset-4">FAQ</a>
+          <a href="#how" className="hover:underline underline-offset-4">
+            How it works
+          </a>
+          <a href="#referee" className="hover:underline underline-offset-4">
+            AI Referee
+          </a>
+          <a href="#mechanic" className="hover:underline underline-offset-4">
+            The pot
+          </a>
+          <a href="#faq" className="hover:underline underline-offset-4">
+            FAQ
+          </a>
         </nav>
         <div className="flex items-center gap-2">
           <Link to="/dashboard" className="hidden sm:inline-flex">
@@ -95,7 +103,9 @@ function Marquee() {
       <div className="marquee flex w-max gap-10 whitespace-nowrap font-display text-lg font-bold">
         {[...items, ...items, ...items].map((t, i) => (
           <span key={i} className="flex items-center gap-10">
-            <span className="rounded-md border-[2px] border-ink bg-cream px-3 py-1 text-ink shadow-brutal-sm">{t}</span>
+            <span className="rounded-md border-[2px] border-ink bg-cream px-3 py-1 text-ink shadow-brutal-sm">
+              {t}
+            </span>
             <span className="text-sky text-2xl">✦</span>
           </span>
         ))}
@@ -153,7 +163,7 @@ function Hero() {
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border-[3px] border-ink bg-cream px-3 py-1 text-xs font-semibold shadow-brutal-sm">
             <span className="ticker-pulse h-2 w-2 rounded-full bg-coral" />
-            Live on Solana devnet · Hackathon build
+            Live goal pools · AI proof checks · Solana escrow
           </div>
           <h1
             className="font-display text-5xl font-extrabold tracking-tight text-ink sm:text-7xl lg:text-[7.5rem]"
@@ -166,7 +176,13 @@ function Hero() {
             </span>
             <br />
             your{" "}
-            <span className="font-serif italic text-cream" style={{ WebkitTextStroke: "2px var(--ink)" }}>mouth</span> is.
+            <span
+              className="font-serif italic text-cream"
+              style={{ WebkitTextStroke: "2px var(--ink)" }}
+            >
+              mouth
+            </span>{" "}
+            is.
           </h1>
           <p className="mx-auto mt-7 max-w-2xl rounded-2xl border-[3px] border-ink bg-cream/90 px-5 py-4 text-lg text-foreground/85 shadow-brutal-sm sm:text-xl">
             Stru pools USDC with your friends on one shared goal. An AI referee checks your proof.
@@ -185,9 +201,15 @@ function Hero() {
             </Link>
           </div>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-foreground/60">
-            <span className="inline-flex items-center gap-1.5"><Check className="size-4" /> No accounts</span>
-            <span className="inline-flex items-center gap-1.5"><Check className="size-4" /> Yield while you sweat</span>
-            <span className="inline-flex items-center gap-1.5"><Check className="size-4" /> 1-click claim</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="size-4" /> Wallet-ready
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="size-4" /> Unspent budget pays winners
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="size-4" /> Clear payout status
+            </span>
           </div>
         </div>
 
@@ -215,10 +237,7 @@ function Hero() {
                 { label: "Players", value: "6", icon: Users },
                 { label: "On track", value: "4 / 6", icon: Trophy },
               ].map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-xl border-2 border-ink bg-secondary p-3"
-                >
+                <div key={s.label} className="rounded-xl border-2 border-ink bg-secondary p-3">
                   <s.icon className="size-4 opacity-60" />
                   <div className="mt-2 font-display text-xl font-extrabold">{s.value}</div>
                   <div className="text-[11px] uppercase tracking-wider text-foreground/60">
@@ -331,7 +350,10 @@ function HowItWorks() {
 
 function Referee() {
   return (
-    <section id="referee" className="relative overflow-hidden border-t-2 border-ink bg-ink py-24 text-cream">
+    <section
+      id="referee"
+      className="relative overflow-hidden border-t-2 border-ink bg-ink py-24 text-cream"
+    >
       <div className="mx-auto grid max-w-7xl gap-14 px-5 lg:grid-cols-2 lg:items-center">
         <div>
           <div className="mb-3 text-xs font-bold uppercase tracking-widest text-lime">
@@ -343,9 +365,9 @@ function Referee() {
             <span className="font-serif italic text-cream/80">Just verdicts.</span>
           </h2>
           <p className="mt-6 max-w-md text-cream/70">
-            Every proof you submit gets reviewed by an AI agent. It looks at the evidence, checks
-            it against your goal, and either green-lights it or sends it back with a reason. You
-            see the receipts every time.
+            Every proof you submit gets reviewed by an AI agent. It looks at the evidence, checks it
+            against your goal, and either green-lights it or sends it back with a reason. You see
+            the receipts every time.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <span className="rounded-full border border-cream/20 bg-cream/5 px-3 py-1 text-xs">
@@ -358,7 +380,7 @@ function Referee() {
               📱 App screenshot
             </span>
             <span className="rounded-full border border-cream/20 bg-cream/5 px-3 py-1 text-xs">
-              🎙 Voice note
+              📊 Activity export
             </span>
           </div>
         </div>
@@ -380,9 +402,7 @@ function Referee() {
                 <div className="flex size-12 items-center justify-center rounded-md border border-cream/20 bg-cream/10 text-xl">
                   🏋️
                 </div>
-                <div className="text-cream/85">
-                  Gym selfie — sessions tab open, 6:42 PM
-                </div>
+                <div className="text-cream/85">Gym selfie — sessions tab open, 6:42 PM</div>
               </div>
             </div>
 
@@ -393,11 +413,10 @@ function Referee() {
               <p className="text-cream/90">
                 <span className="font-bold text-lime">Counts. ✓</span> Visible gym backdrop,
                 timestamp matches today, equipment + posture consistent with a real session. Logged
-                as session{" "}
-                <span className="font-mono text-xs text-cream">7 / 12</span>.
+                as session <span className="font-mono text-xs text-cream">7 / 12</span>.
               </p>
               <div className="mt-3 flex items-center justify-between border-t border-cream/10 pt-3 text-[11px] text-cream/50">
-                <span>x402 fee · 0.012 USDC</span>
+                <span>x402 fee · 0.02 USDC</span>
                 <span className="font-mono">conf 0.94</span>
               </div>
             </div>
@@ -437,7 +456,9 @@ function Mechanic() {
       />
       <div className="relative z-10 mx-auto max-w-6xl px-5">
         <div className="text-center">
-          <div className="mb-3 inline-block rounded-full border-[3px] border-ink bg-cream px-3 py-1 text-xs font-bold uppercase tracking-widest shadow-brutal-sm">The pot mechanic</div>
+          <div className="mb-3 inline-block rounded-full border-[3px] border-ink bg-cream px-3 py-1 text-xs font-bold uppercase tracking-widest shadow-brutal-sm">
+            The pot mechanic
+          </div>
           <h2 className="font-display text-4xl font-extrabold sm:text-6xl">
             Efficient verification = <span className="font-serif italic">richer winners.</span>
           </h2>
@@ -453,23 +474,22 @@ function Mechanic() {
             <div className="font-display text-5xl font-extrabold">240</div>
             <div className="mt-1 text-xs font-bold uppercase tracking-wider">USDC staked</div>
             <p className="mt-3 text-sm text-foreground/70">
-              Six friends, 40 USDC each. Locked in escrow on Solana, earning yield on Kamino while
-              the timer runs.
+              Six friends, 40 USDC each. Locked in escrow on Solana while the timer runs.
             </p>
           </div>
           <div className="rounded-2xl border-2 border-ink bg-card p-6 shadow-brutal">
             <div className="font-display text-5xl font-extrabold">+0.42</div>
-            <div className="mt-1 text-xs font-bold uppercase tracking-wider">Yield earned</div>
+            <div className="mt-1 text-xs font-bold uppercase tracking-wider">Bonus pool</div>
             <p className="mt-3 text-sm text-foreground/70">
-              The pot doesn't sit idle. Every day it grows a little — winners take the upside.
+              Yield and leftover verification budget roll into winner payouts instead of
+              disappearing.
             </p>
           </div>
           <div className="rounded-2xl border-2 border-ink bg-coral p-6 text-cream shadow-brutal">
             <div className="font-display text-5xl font-extrabold">−1.1</div>
             <div className="mt-1 text-xs font-bold uppercase tracking-wider">x402 fees so far</div>
             <p className="mt-3 text-sm text-cream/85">
-              48 verifications across the group. The cleaner your proof, the cheaper the pool
-              runs.
+              48 verifications across the group. The cleaner your proof, the cheaper the pool runs.
             </p>
           </div>
         </div>
@@ -483,7 +503,7 @@ function Mechanic() {
               <div className="mt-1 font-display text-4xl font-extrabold">~ 59.83 USDC</div>
             </div>
             <div className="text-xs text-cream/60">
-              Assuming 4/6 finish · stakes + yield + forfeits − fees
+              Assuming 4/6 finish · stakes + bonus pool + forfeits − verification fees
             </div>
           </div>
         </div>
@@ -496,7 +516,7 @@ function FAQ() {
   const items = [
     {
       q: "What if the AI gets it wrong?",
-      a: "Every verdict comes with a reason and a confidence score. You can re-submit with better evidence. If a verdict gets disputed by the group, the call goes to a stricter review pass.",
+      a: "Every verdict comes with a reason and a confidence score. If it fails, you can re-submit clearer evidence before the deadline. For v1, the AI referee is final.",
     },
     {
       q: "What happens to people who don't finish?",
@@ -508,7 +528,7 @@ function FAQ() {
     },
     {
       q: "What chains does it support?",
-      a: "Solana first — fast, cheap, and the x402 micropayment rails work cleanly. Devnet now, mainnet after the hackathon.",
+      a: "Solana first — fast, cheap, and a strong fit for pooled escrow plus x402-style micropayments. This build targets devnet while the on-chain flow is finalized.",
     },
   ];
   return (
@@ -580,14 +600,20 @@ function Footer() {
           <span className="ml-2 text-xs text-cream/50">© 2026</span>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-cream/70">
-          <a href="#" className="hover:text-lime">Twitter</a>
-          <a href="#" className="hover:text-lime">GitHub</a>
-          <a href="#" className="hover:text-lime">Docs</a>
-          <a href="#" className="hover:text-lime">Hackathon submission</a>
+          <a href="#how" className="hover:text-lime">
+            How it works
+          </a>
+          <a href="#referee" className="hover:text-lime">
+            AI referee
+          </a>
+          <a href="#mechanic" className="hover:text-lime">
+            The pot
+          </a>
+          <a href="#faq" className="hover:text-lime">
+            FAQ
+          </a>
         </div>
-        <div className="font-mono text-xs text-cream/40">
-          built on solana · jhb 🇿🇦
-        </div>
+        <div className="font-mono text-xs text-cream/40">built on solana · jhb 🇿🇦</div>
       </div>
     </footer>
   );

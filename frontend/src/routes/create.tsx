@@ -7,8 +7,22 @@ import { api, type Goal } from "@/lib/api";
 import { useWallet } from "@/lib/wallet";
 
 export const Route = createFileRoute("/create")({
+  head: () => ({
+    meta: [
+      { title: "Create a pool — Stru" },
+      {
+        name: "description",
+        content:
+          "Turn a vague goal into a measurable Stru pool with a stake, deadline, and proof standard.",
+      },
+    ],
+  }),
   component: CreatePage,
 });
+
+function shortWallet(wallet: string) {
+  return wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : "connecting";
+}
 
 function CreatePage() {
   const wallet = useWallet();
@@ -18,9 +32,14 @@ function CreatePage() {
   const [durationMins, setDurationMins] = useState(60);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const canCreate = Boolean(goal && wallet && stake >= 1 && durationMins >= 5 && !creating);
 
   async function create() {
     if (!goal || !wallet) return;
+    if (stake < 1 || durationMins < 5) {
+      setError("Stake must be at least 1 USDC and duration must be at least 5 minutes.");
+      return;
+    }
     setCreating(true);
     setError(null);
     try {
@@ -46,7 +65,7 @@ function CreatePage() {
             <ArrowLeft className="size-4" /> Back
           </Link>
           <span className="font-mono text-xs text-foreground/60">
-            wallet · {wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : "loading"}
+            wallet · {shortWallet(wallet)}
           </span>
         </div>
       </header>
@@ -57,8 +76,8 @@ function CreatePage() {
             Set a goal worth betting on
           </h1>
           <p className="mt-2 text-foreground/70">
-            Talk to the coach until the goal is concrete and verifiable. Then lock in the stake and
-            timer.
+            Talk to the coach until the goal is concrete and verifiable. Then lock in the stake,
+            deadline, and proof rules for everyone joining.
           </p>
           <div className="mt-6">
             <GoalChat onGoalReady={setGoal} />
@@ -70,23 +89,31 @@ function CreatePage() {
             Pool config
           </div>
 
-          <label className="mt-4 block text-sm font-medium">Stake per person (USDC)</label>
+          <label htmlFor="stake" className="mt-4 block text-sm font-medium">
+            Stake per person (USDC)
+          </label>
           <input
+            id="stake"
             type="number"
             min={1}
+            step="0.01"
             value={stake}
-            onChange={(e) => setStake(parseFloat(e.target.value || "0"))}
+            onChange={(e) => setStake(Math.max(0, parseFloat(e.target.value || "0")))}
             className="mt-1 w-full rounded-md border-2 border-ink bg-cream px-3 py-2 text-sm"
           />
 
-          <label className="mt-4 block text-sm font-medium">Duration (minutes)</label>
+          <label htmlFor="duration" className="mt-4 block text-sm font-medium">
+            Duration (minutes)
+          </label>
           <input
+            id="duration"
             type="number"
             min={5}
             value={durationMins}
-            onChange={(e) => setDurationMins(parseInt(e.target.value || "0", 10))}
+            onChange={(e) => setDurationMins(Math.max(0, parseInt(e.target.value || "0", 10)))}
             className="mt-1 w-full rounded-md border-2 border-ink bg-cream px-3 py-2 text-sm"
           />
+          <p className="mt-2 text-xs text-foreground/55">Minimum pool duration is 5 minutes.</p>
 
           <div className="mt-5 rounded-xl border-2 border-ink bg-secondary p-3 text-sm">
             <div className="font-bold">Goal</div>
@@ -99,7 +126,7 @@ function CreatePage() {
             <Button
               variant="hero"
               size="lg"
-              disabled={!goal || creating || !wallet}
+              disabled={!canCreate}
               onClick={create}
               className="w-full"
             >

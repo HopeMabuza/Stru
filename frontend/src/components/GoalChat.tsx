@@ -35,13 +35,16 @@ export function GoalChat({ onGoalReady }: Props) {
   }
 
   function visibleReply(content: string) {
-    return content.replace(/GOAL_READY:[\s\S]*/g, "").replace(/ALTERNATIVES:[\s\S]*/g, "").trim();
+    return content
+      .replace(/GOAL_READY:[\s\S]*/g, "")
+      .replace(/ALTERNATIVES:[\s\S]*/g, "")
+      .trim();
   }
 
   return (
     <div className="rounded-2xl border-2 border-ink bg-card p-5 shadow-brutal">
       <div className="mb-4 flex items-center justify-between text-xs">
-        <span className="font-mono text-foreground/60">goal-chat://session</span>
+        <span className="font-mono text-foreground/60">goal coach</span>
         <span className="inline-flex items-center gap-1.5">
           <span className="ticker-pulse h-2 w-2 rounded-full bg-lime" />
           <span className="text-foreground/60">{pending ? "thinking..." : "ready"}</span>
@@ -51,8 +54,8 @@ export function GoalChat({ onGoalReady }: Props) {
       <div className="space-y-3 max-h-[420px] overflow-y-auto">
         {history.length === 0 && (
           <p className="text-sm text-foreground/60">
-            Start by telling the coach what you want to commit to. They'll grill you until the goal
-            is measurable.
+            Start with the messy version of your goal. The coach will ask for the action, quantity,
+            proof type, and deadline until it can be verified fairly.
           </p>
         )}
         {history.map((m, i) => (
@@ -89,9 +92,7 @@ export function GoalChat({ onGoalReady }: Props) {
 
       {goal && (
         <div className="mt-4 rounded-xl border-2 border-ink bg-lime/30 p-4 text-sm">
-          <div className="text-xs font-bold uppercase tracking-wider text-ink">
-            Locked-in goal
-          </div>
+          <div className="text-xs font-bold uppercase tracking-wider text-ink">Locked-in goal</div>
           <div className="mt-1 font-display text-lg font-extrabold">{goal.description}</div>
           <ul className="mt-2 space-y-0.5 text-foreground/80">
             <li>
@@ -123,8 +124,9 @@ export function GoalChat({ onGoalReady }: Props) {
         }}
       >
         <input
+          aria-label="Goal message"
           className="flex-1 rounded-md border-2 border-ink bg-cream px-3 py-2 text-sm focus:outline-none"
-          placeholder="I want to..."
+          placeholder="I want to go to the gym more..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={pending}

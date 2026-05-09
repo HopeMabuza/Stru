@@ -7,9 +7,6 @@ interface Props {
   wallet: string;
 }
 
-// Settlement and claim are on-chain (Anchor settle_pool + claim).
-// This component reflects state once the deadline passes; the actual signing
-// will be wired to the Anchor program in a follow-up.
 export function ClaimButton({ pool, participants, wallet }: Props) {
   const expired = new Date(pool.deadline).getTime() <= Date.now();
   if (!expired) return null;
@@ -36,8 +33,8 @@ export function ClaimButton({ pool, participants, wallet }: Props) {
           {winners.length === 1 ? "" : "s"} completed.
         </p>
         <div className="mt-3">
-          <Button variant="ink" disabled title="Anchor settle_pool not yet wired in">
-            Settle pool (on-chain — coming soon)
+          <Button variant="ink" disabled title="Waiting for on-chain settlement wiring">
+            Settlement pending
           </Button>
         </div>
       </div>
@@ -55,12 +52,10 @@ export function ClaimButton({ pool, participants, wallet }: Props) {
   return (
     <div className="rounded-2xl border-2 border-ink bg-lime/30 p-5">
       <div className="mb-2 font-display text-lg font-extrabold">You won 🏆</div>
-      <p className="text-sm text-foreground/80">
-        Your share of the pot is ready to claim.
-      </p>
+      <p className="text-sm text-foreground/80">Your share of the pot is ready to claim.</p>
       <div className="mt-3">
         <Button variant="hero" disabled title="Anchor claim not yet wired in">
-          Claim winnings (on-chain — coming soon)
+          Claim pending
         </Button>
       </div>
     </div>

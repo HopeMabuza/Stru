@@ -25,6 +25,20 @@ function useCountdown(deadlineIso: string) {
   return { ms, d, h, m, s, expired: ms === 0 };
 }
 
+function formatUsdc(value: number) {
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
+}
+
+function shortWallet(wallet: string) {
+  return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+}
+
+function statusClasses(status: ParticipantRow["status"]) {
+  if (status === "completed") return "bg-lime";
+  if (status === "failed") return "bg-coral";
+  return "bg-secondary";
+}
+
 export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) {
   const { d, h, m, s, expired } = useCountdown(pool.deadline);
   const [joining, setJoining] = useState(false);
@@ -33,6 +47,7 @@ export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) 
   const joined = participants.some((p) => p.wallet_address === wallet);
   const completed = participants.filter((p) => p.status === "completed").length;
   const pot = pool.stake_amount * participants.length;
+  const progress = participants.length ? Math.round((completed / participants.length) * 100) : 0;
 
   async function join() {
     if (!wallet) return;
@@ -66,21 +81,30 @@ export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) 
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="Pot" value={`${pot} USDC`} icon={Coins} />
-        <Stat label="Stake" value={`${pool.stake_amount}`} icon={Coins} />
+        <Stat label="Pot" value={`${formatUsdc(pot)} USDC`} icon={Coins} />
+        <Stat label="Stake" value={`${formatUsdc(pool.stake_amount)} USDC`} icon={Coins} />
         <Stat label="Players" value={`${participants.length}`} icon={Users} />
-        <Stat label="On track" value={`${completed} / ${participants.length}`} icon={Trophy} />
+        <Stat label="Completed" value={`${progress}%`} icon={Trophy} />
+      </div>
+
+      <div className="mt-5 rounded-2xl border-2 border-ink bg-cream p-4 text-sm">
+        <div className="font-bold">Proof required</div>
+        <p className="mt-1 text-foreground/70">{pool.goal_json.proof_type}</p>
+        <p className="mt-2 font-mono text-xs text-foreground/55">
+          target · {pool.goal_json.threshold} {pool.goal_json.unit}
+        </p>
       </div>
 
       <div className="mt-6 space-y-2.5">
         {participants.map((p) => (
           <div key={p.id} className="flex items-center gap-3">
-            <div className="w-32 truncate font-mono text-xs">{p.wallet_address}</div>
+            <div className="w-32 truncate font-mono text-xs">
+              {shortWallet(p.wallet_address)}
+              {p.wallet_address === wallet ? " · you" : ""}
+            </div>
             <div className="relative h-6 flex-1 overflow-hidden rounded-md border-2 border-ink bg-cream">
               <div
-                className={`h-full border-r-2 border-ink ${
-                  p.status === "completed" ? "bg-lime" : "bg-secondary"
-                }`}
+                className={`h-full border-r-2 border-ink ${statusClasses(p.status)}`}
                 style={{ width: p.status === "completed" ? "100%" : "10%" }}
               />
               <span className="absolute inset-0 flex items-center px-2 text-[11px] font-bold">
@@ -90,14 +114,16 @@ export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) 
           </div>
         ))}
         {participants.length === 0 && (
-          <p className="text-sm text-foreground/60">No one has joined yet.</p>
+          <p className="rounded-xl border-2 border-dashed border-ink/30 bg-cream p-4 text-sm text-foreground/60">
+            No one has joined yet. Share the invite link to get the pool moving.
+          </p>
         )}
       </div>
 
       {!joined && !expired && pool.status === "active" && (
         <div className="mt-6">
           <Button variant="hero" disabled={joining || !wallet} onClick={join}>
-            {joining ? "Joining..." : `Join & stake ${pool.stake_amount} USDC`}
+            {joining ? "Joining..." : `Join & stake ${formatUsdc(pool.stake_amount)} USDC`}
           </Button>
         </div>
       )}

@@ -72,14 +72,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Stru — AI accountability pools on Solana" },
+      {
+        name: "description",
+        content:
+          "Create friend-group accountability pools, stake USDC, submit proof, and let an AI referee verify who gets paid.",
+      },
+      { name: "author", content: "Stru" },
+      { name: "theme-color", content: "#f7f0d8" },
+      { property: "og:title", content: "Stru — Bet on yourself" },
+      {
+        property: "og:description",
+        content:
+          "Friend-group goal accountability with USDC stakes, AI verification, and Solana escrow.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
@@ -100,7 +108,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-background text-foreground antialiased">
         {children}
         <Scripts />
       </body>

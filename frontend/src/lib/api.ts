@@ -64,10 +64,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`${res.status} ${res.statusText}: ${text}`);
+    throw new Error(await responseMessage(res));
   }
   return res.json() as Promise<T>;
+}
+
+async function responseMessage(res: Response): Promise<string> {
+  const fallback = `${res.status} ${res.statusText}`;
+  const text = await res.text().catch(() => "");
+  if (!text) return fallback;
+  try {
+    const data = JSON.parse(text) as { error?: string; message?: string };
+    return data.error ?? data.message ?? fallback;
+  } catch {
+    return text.length > 180 ? `${text.slice(0, 180)}...` : text;
+  }
 }
 
 export const api = {
@@ -125,8 +136,7 @@ export const api = {
     fd.append("wallet_address", input.wallet_address);
     const res = await fetch(`${BASE}/verify`, { method: "POST", body: fd });
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`${res.status} ${res.statusText}: ${text}`);
+      throw new Error(await responseMessage(res));
     }
     return res.json() as Promise<VerifyResult>;
   },

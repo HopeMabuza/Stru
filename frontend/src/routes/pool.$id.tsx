@@ -9,8 +9,21 @@ import { api, type ParticipantRow, type PoolRow } from "@/lib/api";
 import { useWallet } from "@/lib/wallet";
 
 export const Route = createFileRoute("/pool/$id")({
+  head: () => ({
+    meta: [
+      { title: "Pool — Stru" },
+      {
+        name: "description",
+        content: "Join a Stru pool, submit AI-verifiable proof, and track payout status.",
+      },
+    ],
+  }),
   component: PoolPage,
 });
+
+function shortWallet(wallet: string) {
+  return wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : "connecting";
+}
 
 function PoolPage() {
   const { id } = Route.useParams();
@@ -18,6 +31,7 @@ function PoolPage() {
   const [pool, setPool] = useState<PoolRow | null>(null);
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -43,7 +57,7 @@ function PoolPage() {
             <ArrowLeft className="size-4" /> Back
           </Link>
           <span className="font-mono text-xs text-foreground/60">
-            wallet · {wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : "loading"}
+            wallet · {shortWallet(wallet)}
           </span>
         </div>
       </header>
@@ -55,7 +69,12 @@ function PoolPage() {
           </div>
         )}
 
-        {!pool && !error && <p className="text-sm text-foreground/60">Loading pool...</p>}
+        {!pool && !error && (
+          <div
+            className="h-64 animate-pulse rounded-3xl border-2 border-ink/20 bg-cream"
+            aria-label="Loading pool"
+          />
+        )}
 
         {pool && (
           <>
@@ -80,9 +99,13 @@ function PoolPage() {
                   <Button
                     variant="ink"
                     size="sm"
-                    onClick={() => navigator.clipboard?.writeText(inviteUrl)}
+                    onClick={async () => {
+                      await navigator.clipboard?.writeText(inviteUrl);
+                      setCopied(true);
+                      window.setTimeout(() => setCopied(false), 1500);
+                    }}
                   >
-                    <Copy className="size-4" />
+                    <Copy className="size-4" /> {copied ? "Copied" : "Copy"}
                   </Button>
                 </div>
               </div>
