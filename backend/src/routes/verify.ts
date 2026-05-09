@@ -6,10 +6,25 @@ import { createClient } from '@supabase/supabase-js';
 import * as anchor from '@coral-xyz/anchor';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
-import IDL from '../../../target/idl/stakeup.json';
+import { readFileSync } from 'fs';
+import path from 'path';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+type ProgramIdl = anchor.Idl & {
+  address?: string;
+};
+
+let cachedIdl: ProgramIdl | null = null;
+
+function getProgramIdl(): ProgramIdl {
+  if (cachedIdl) return cachedIdl;
+
+  const idlPath = path.resolve(__dirname, '../../../frontend/src/lib/stru_idl.json');
+  cachedIdl = JSON.parse(readFileSync(idlPath, 'utf8')) as ProgramIdl;
+  return cachedIdl;
+}
 
 async function callMarkComplete(poolPdaStr: string, walletAddress: string) {
   if (!process.env.ORACLE_WALLET_PRIVATE_KEY || !process.env.PROGRAM_ID) return;
@@ -18,7 +33,14 @@ async function callMarkComplete(poolPdaStr: string, walletAddress: string) {
     const oracleKeypair = Keypair.fromSecretKey(bs58.decode(process.env.ORACLE_WALLET_PRIVATE_KEY));
     const wallet = new anchor.Wallet(oracleKeypair);
     const provider = new anchor.AnchorProvider(connection, wallet, { commitment: 'confirmed' });
-    const program = new anchor.Program(IDL as unknown as anchor.Idl, provider);
+    const idl = getProgramIdl();
+    const programId = process.env.PROGRAM_ID || idl.address;
+
+    if (!programId) {
+      throw new Error('PROGRAM_ID is required or must be present in the IDL');
+    }
+
+    const program = new anchor.Program(idl, programId, provider);
 
     const poolPda = new PublicKey(poolPdaStr);
     const walletKey = new PublicKey(walletAddress);
