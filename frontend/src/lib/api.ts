@@ -48,7 +48,7 @@ export interface PoolRow {
   stake_amount: number;
   budget: number;
   deadline: string;
-  status: "active" | "settled" | "cancelled";
+  status: "pending_onchain" | "active" | "settled" | "cancelled";
   creator_id: string | null;
   created_at: string;
 }
@@ -154,6 +154,20 @@ export const api = {
 
   joinPool(id: string, wallet_address: string): Promise<ParticipantRow> {
     return request<ParticipantRow>(`/pool/${id}/join`, {
+      method: "POST",
+      body: JSON.stringify({ wallet_address }),
+    });
+  },
+
+  activatePool(id: string, wallet_address: string): Promise<PoolRow> {
+    return request<PoolRow>(`/pool/${id}/activate`, {
+      method: "POST",
+      body: JSON.stringify({ wallet_address }),
+    });
+  },
+
+  cancelPool(id: string, wallet_address: string): Promise<PoolRow> {
+    return request<PoolRow>(`/pool/${id}/cancel`, {
       method: "POST",
       body: JSON.stringify({ wallet_address }),
     });

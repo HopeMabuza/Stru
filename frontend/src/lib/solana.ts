@@ -13,6 +13,7 @@ const PROGRAM_ID = new PublicKey("JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y")
 const USDC_MINT = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
 const USDC_DECIMALS = 6;
 const POOL_STAKE_OFFSET = 8 + 32 + 32;
+const MIN_CREATE_SOL_LAMPORTS = 20_000_000;
 const MIN_JOIN_SOL_LAMPORTS = 5_000_000;
 const textEncoder = new TextEncoder();
 
@@ -68,6 +69,10 @@ function getParticipantPda(poolPda: PublicKey, wallet: PublicKey): PublicKey {
 
 function usdcToLamports(usdc: number): anchor.BN {
   return new anchor.BN(Math.round(usdc * 10 ** USDC_DECIMALS));
+}
+
+function usdcToLamportsBigInt(usdc: number): bigint {
+  return BigInt(Math.round(usdc * 10 ** USDC_DECIMALS));
 }
 
 function formatUsdcLamports(lamports: bigint): string {
@@ -148,6 +153,49 @@ async function preflightJoinPool(params: {
   return "needs-join";
 }
 
+async function preflightCreatePool(params: {
+  walletPubkey: PublicKey;
+  poolPda: PublicKey;
+  creatorTokenAccount: PublicKey;
+  requiredDeposit: bigint;
+}): Promise<void> {
+  const [solBalance, poolAccount] = await Promise.all([
+    connection.getBalance(params.walletPubkey, "confirmed"),
+    connection.getAccountInfo(params.poolPda, "confirmed"),
+  ]);
+
+  if (solBalance < MIN_CREATE_SOL_LAMPORTS) {
+    throw new Error(
+      "Your wallet needs at least 0.02 devnet SOL to create the pool account and vault.",
+    );
+  }
+
+  if (poolAccount) {
+    throw new Error(
+      "This pool already exists on-chain. Please refresh before creating another pool.",
+    );
+  }
+
+  let tokenAccount;
+  try {
+    tokenAccount = await getAccount(connection, params.creatorTokenAccount, "confirmed");
+  } catch {
+    throw new Error(
+      `Your wallet does not have a devnet USDC token account for ${USDC_MINT.toBase58()}. Fund it with devnet USDC before creating a pool.`,
+    );
+  }
+
+  if (!tokenAccount.mint.equals(USDC_MINT)) {
+    throw new Error("Your devnet USDC token account uses the wrong mint for this app.");
+  }
+
+  if (tokenAccount.amount < params.requiredDeposit) {
+    throw new Error(
+      `Your wallet has ${formatUsdcLamports(tokenAccount.amount)} devnet USDC, but creating this pool requires ${formatUsdcLamports(params.requiredDeposit)} USDC for stake plus verification budget.`,
+    );
+  }
+}
+
 function getPhantom() {
   const phantom =
     (window as unknown as { phantom?: { solana?: unknown }; solana?: unknown }).phantom?.solana ??
@@ -202,6 +250,13 @@ export async function onChainCreatePool(params: {
   const poolPda = parsePublicKey(params.poolPda, "Pool address");
   const vaultPda = getVaultPda(poolPda);
   const creatorTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
+
+  await preflightCreatePool({
+    walletPubkey,
+    poolPda,
+    creatorTokenAccount,
+    requiredDeposit: usdcToLamportsBigInt(params.stakeUsdc + params.budgetUsdc),
+  });
 
   const program = getProgram(walletPubkey);
   const tx = await program.methods

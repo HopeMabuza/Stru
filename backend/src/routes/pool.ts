@@ -8,6 +8,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+type PoolWithCreator = {
+  users?: { wallet_address?: string } | { wallet_address?: string }[] | null;
+};
+
+function creatorWalletFor(pool: PoolWithCreator): string | undefined {
+  const users = pool.users;
+  return Array.isArray(users) ? users[0]?.wallet_address : users?.wallet_address;
+}
+
 // GET /pool/:id — pool row + participants
 router.get('/:id', async (req: Request, res: Response) => {
   try {
@@ -97,6 +106,9 @@ router.post('/:id/join', async (req: Request, res: Response) => {
     if (poolError || !pool) {
       return res.status(404).json({ error: 'Pool not found' });
     }
+    if (pool.status === 'pending_onchain') {
+      return res.status(400).json({ error: 'Pool is still waiting for its on-chain create transaction' });
+    }
     if (pool.status !== 'active') {
       return res.status(400).json({ error: 'Pool is not active' });
     }
@@ -119,6 +131,92 @@ router.post('/:id/join', async (req: Request, res: Response) => {
     return res.json(data);
   } catch (err) {
     console.error('pool/join error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /pool/:id/activate — called by frontend after on-chain create_pool tx confirms
+router.post('/:id/activate', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { wallet_address } = req.body as { wallet_address?: string };
+
+    if (!wallet_address) {
+      return res.status(400).json({ error: 'wallet_address is required' });
+    }
+
+    const { data: pool, error: poolError } = await supabase
+      .from('pools')
+      .select('id, status, creator_id, users!pools_creator_id_fkey(wallet_address)')
+      .eq('id', id)
+      .single();
+
+    if (poolError || !pool) {
+      return res.status(404).json({ error: 'Pool not found' });
+    }
+
+    const creatorWallet = creatorWalletFor(pool as PoolWithCreator);
+    if (creatorWallet !== wallet_address) {
+      return res.status(403).json({ error: 'Only the creator can activate this pool' });
+    }
+    if (pool.status !== 'pending_onchain') {
+      return res.status(400).json({ error: 'Pool is not pending on-chain creation' });
+    }
+
+    const { data, error } = await supabase
+      .from('pools')
+      .update({ status: 'active' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return res.json(data);
+  } catch (err) {
+    console.error('pool/activate error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /pool/:id/cancel — cleanup if create_pool fails before on-chain initialization
+router.post('/:id/cancel', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { wallet_address } = req.body as { wallet_address?: string };
+
+    if (!wallet_address) {
+      return res.status(400).json({ error: 'wallet_address is required' });
+    }
+
+    const { data: pool, error: poolError } = await supabase
+      .from('pools')
+      .select('id, status, creator_id, users!pools_creator_id_fkey(wallet_address)')
+      .eq('id', id)
+      .single();
+
+    if (poolError || !pool) {
+      return res.status(404).json({ error: 'Pool not found' });
+    }
+
+    const creatorWallet = creatorWalletFor(pool as PoolWithCreator);
+    if (creatorWallet !== wallet_address) {
+      return res.status(403).json({ error: 'Only the creator can cancel this pool' });
+    }
+    if (pool.status === 'settled') {
+      return res.status(400).json({ error: 'Settled pools cannot be cancelled' });
+    }
+
+    const { data, error } = await supabase
+      .from('pools')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return res.json(data);
+  } catch (err) {
+    console.error('pool/cancel error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

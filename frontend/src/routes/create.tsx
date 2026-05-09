@@ -44,6 +44,7 @@ function CreatePage() {
     }
     setCreating(true);
     setError(null);
+    let pendingPoolId: string | null = null;
     try {
       const res = await api.goalCreate({
         goal,
@@ -51,6 +52,7 @@ function CreatePage() {
         duration_secs: durationMins * 60,
         creator_wallet: wallet,
       });
+      pendingPoolId = res.pool_id;
       // Sign + send the on-chain create_pool transaction via Phantom
       await onChainCreatePool({
         walletAddress: wallet,
@@ -61,8 +63,12 @@ function CreatePage() {
         durationSecs: durationMins * 60,
         poolIdU64: res.pool_id_u64,
       });
+      await api.activatePool(res.pool_id, wallet);
       navigate({ to: "/pool/$id", params: { id: res.pool_id } });
     } catch (e) {
+      if (pendingPoolId) {
+        await api.cancelPool(pendingPoolId, wallet).catch(() => undefined);
+      }
       setError(e instanceof Error ? e.message : "Could not create pool");
     } finally {
       setCreating(false);
