@@ -6,6 +6,13 @@ import { defineConfig, loadEnv } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
+const clientNodePolyfills = nodePolyfills({
+  include: ["buffer", "crypto", "stream", "util", "process"],
+  protocolImports: false,
+});
+
+clientNodePolyfills.applyToEnvironment = (environment) => environment.name === "client";
+
 export default defineConfig(({ command, mode }) => {
   const envDefine = Object.fromEntries(
     Object.entries(loadEnv(mode, process.cwd(), "VITE_")).map(([key, value]) => [
@@ -29,7 +36,7 @@ export default defineConfig(({ command, mode }) => {
       ],
     },
     plugins: [
-      nodePolyfills({ include: ["buffer", "crypto", "stream", "util", "process"] }),
+      clientNodePolyfills,
       tailwindcss(),
       tsConfigPaths({ projects: ["./tsconfig.json"] }),
       tanstackStart({
