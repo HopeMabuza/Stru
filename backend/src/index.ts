@@ -18,5 +18,5 @@ app.get('/health', (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`StakeUp backend running on http://localhost:${PORT}`);
+  console.log(`Stru backend running on http://localhost:${PORT}`);
 });

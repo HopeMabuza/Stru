@@ -1,6 +1,6 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
-import { Stakeup } from '../target/types/stakeup';
+import { Stru } from '../target/types/stru';
 import {
   PublicKey,
   Keypair,
@@ -16,11 +16,11 @@ import {
 import { assert } from 'chai';
 import crypto from 'crypto';
 
-describe('stakeup', () => {
+describe('stru', () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.Stakeup as Program<Stakeup>;
+  const program = anchor.workspace.Stru as Program<Stru>;
   const connection = provider.connection;
 
   let usdcMint: PublicKey;

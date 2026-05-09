@@ -1,7 +1,7 @@
 {
-  "name": "stakeup-backend",
+  "name": "stru-backend",
   "version": "1.0.0",
-  "description": "StakeUp backend — AI agents, x402, Anchor CPI",
+  "description": "Stru backend — AI agents, x402, Anchor CPI",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",

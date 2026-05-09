@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::ORACLE_PUBKEY;
-use crate::errors::StakeUpError;
+use crate::errors::StruError;
 
 // Metaplex Bubblegum CPI is a stretch goal.
 // For the hackathon demo this instruction is a stub that emits an event.
@@ -8,7 +8,7 @@ use crate::errors::StakeUpError;
 
 #[derive(Accounts)]
 pub struct MintBadge<'info> {
-    #[account(constraint = oracle.key() == ORACLE_PUBKEY @ StakeUpError::Unauthorized)]
+    #[account(constraint = oracle.key() == ORACLE_PUBKEY @ StruError::Unauthorized)]
     pub oracle: Signer<'info>,
 }
 

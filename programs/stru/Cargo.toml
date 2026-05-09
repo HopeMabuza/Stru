@@ -1,12 +1,12 @@
 [package]
-name = "stakeup"
+name = "stru"
 version = "0.1.0"
-description = "StakeUp — on-chain goal accountability pools"
+description = "Stru — on-chain goal accountability pools"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "stakeup"
+name = "stru"
 
 [features]
 no-entrypoint = []

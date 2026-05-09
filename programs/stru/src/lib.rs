@@ -15,7 +15,7 @@ pub const ORACLE_PUBKEY: Pubkey = Pubkey::new_from_array([
 ]);
 
 #[program]
-pub mod stakeup {
+pub mod stru {
     use super::*;
 
     pub fn create_pool(

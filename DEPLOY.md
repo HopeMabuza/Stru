@@ -1,8 +1,8 @@
-# StakeUp — Devnet Deployment
+# Stru — Devnet Deployment
 
 ## What this is
 
-The StakeUp Anchor program has been successfully compiled and deployed to the **Solana devnet**. This means the on-chain logic (pool creation, staking, AI verification, settlement, and payouts) is live and callable.
+The Stru Anchor program has been successfully compiled and deployed to the **Solana devnet**. This means the on-chain logic (pool creation, staking, AI verification, settlement, and payouts) is live and callable.
 
 ---
 
@@ -20,7 +20,7 @@ The StakeUp Anchor program has been successfully compiled and deployed to the **
 
 ## What "Program ID" means
 
-The Program ID is the on-chain address of the StakeUp smart contract. Every pool, stake, and settlement transaction references this address. It's already saved in `.env` as `PROGRAM_ID`.
+The Program ID is the on-chain address of the Stru smart contract. Every pool, stake, and settlement transaction references this address. It's already saved in `.env` as `PROGRAM_ID`.
 
 The **IDL metadata account** stores the program's interface definition on-chain — this is what lets the frontend and backend talk to the program without needing a local copy of the IDL file.
 

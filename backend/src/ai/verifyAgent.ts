@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const SYSTEM_PROMPT = `You are an evidence verifier for StakeUp. You receive:
+const SYSTEM_PROMPT = `You are an evidence verifier for Stru. You receive:
 - An image or file submitted as proof
 - The goal object the user committed to
 

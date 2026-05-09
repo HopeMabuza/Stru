@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 use crate::state::Pool;
-use crate::errors::StakeUpError;
+use crate::errors::StruError;
 
 #[derive(Accounts)]
 pub struct SettlePool<'info> {
@@ -21,8 +21,8 @@ pub struct SettlePool<'info> {
 pub fn handler(ctx: Context<SettlePool>) -> Result<()> {
     let clock = Clock::get()?;
 
-    require!(!ctx.accounts.pool.settled, StakeUpError::PoolAlreadySettled);
-    require!(clock.unix_timestamp >= ctx.accounts.pool.deadline, StakeUpError::DeadlineNotReached);
+    require!(!ctx.accounts.pool.settled, StruError::PoolAlreadySettled);
+    require!(clock.unix_timestamp >= ctx.accounts.pool.deadline, StruError::DeadlineNotReached);
 
     // Snapshot values before mutably borrowing
     let pool_key = ctx.accounts.pool.key();

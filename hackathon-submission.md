@@ -1,7 +1,7 @@
-# StakeUp — Hackathon Submission Form
+# Stru — Hackathon Submission Form
 
 ## Project Name
-StakeUp
+Stru
 
 ---
 
@@ -34,11 +34,11 @@ Johannesburg, South Africa *(auto-detected)*
 ## Description
 *(300 words max)*
 
-Goals are easy to set and easy to abandon. StakeUp fixes that by putting money on the line and letting your friends watch.
+Goals are easy to set and easy to abandon. Stru fixes that by putting money on the line and letting your friends watch.
 
 **The problem:** Accountability apps rely on the honor system. You tell your friends about your goal, they politely forget by week two, and so do you. Nothing actually changes.
 
-**What StakeUp does:** A group of friends pools USDC into a shared on-chain escrow. Everyone commits to the same goal — say, 12 gym sessions in 30 days. The pool earns yield while the timer runs. When it hits zero, everyone who completed their goal splits the full pot: their original stake, the yield it earned, and the forfeited stakes of everyone who didn't show up.
+**What Stru does:** A group of friends pools USDC into a shared on-chain escrow. Everyone commits to the same goal — say, 12 gym sessions in 30 days. The pool earns yield while the timer runs. When it hits zero, everyone who completed their goal splits the full pot: their original stake, the yield it earned, and the forfeited stakes of everyone who didn't show up.
 
 **The AI referee:** You can't just say you went to the gym. You submit evidence — a photo, a screenshot, a Strava export. An AI agent reviews it, decides if it counts, and explains its verdict out loud. No humans, no honor system, no disputes.
 
@@ -46,7 +46,7 @@ Goals are easy to set and easy to abandon. StakeUp fixes that by putting money o
 
 **The stack:** Anchor smart contract on Solana handles escrow, yield routing (Kamino), and settlement. A Node.js backend hosts the AI verification endpoints gated behind x402 payments. A Next.js frontend gives each participant a live dashboard showing the group's progress and a one-click claim when they win.
 
-StakeUp isn't a DeFi tool. It's peer pressure, but make it onchain.
+Stru isn't a DeFi tool. It's peer pressure, but make it onchain.
 
 ---
 

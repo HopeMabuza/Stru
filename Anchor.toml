@@ -5,10 +5,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-stakeup = "JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y"
+stru = "JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y"
 
 [programs.localnet]
-stakeup = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+stru = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 
 [provider]
 cluster = "devnet"

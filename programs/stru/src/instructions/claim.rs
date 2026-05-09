@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{Pool, Participant};
-use crate::errors::StakeUpError;
+use crate::errors::StruError;
 
 #[derive(Accounts)]
 pub struct Claim<'info> {
@@ -11,8 +11,8 @@ pub struct Claim<'info> {
     #[account(
         seeds = [b"participant", pool.key().as_ref(), winner.key().as_ref()],
         bump = participant.bump,
-        constraint = participant.wallet == winner.key() @ StakeUpError::Unauthorized,
-        constraint = participant.completed @ StakeUpError::NotCompleted,
+        constraint = participant.wallet == winner.key() @ StruError::Unauthorized,
+        constraint = participant.completed @ StruError::NotCompleted,
     )]
     pub participant: Account<'info, Participant>,
 
@@ -34,10 +34,10 @@ pub struct Claim<'info> {
 pub fn handler(ctx: Context<Claim>) -> Result<()> {
     let pool = &ctx.accounts.pool;
 
-    require!(pool.settled, StakeUpError::PoolNotSettled);
+    require!(pool.settled, StruError::PoolNotSettled);
 
     let winners = pool.completed_count as u64;
-    require!(winners > 0, StakeUpError::NoWinners);
+    require!(winners > 0, StruError::NoWinners);
 
     let losers = (pool.participant_count as u64).saturating_sub(winners);
     let loser_stakes = losers * pool.stake_amount;

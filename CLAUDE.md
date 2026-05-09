@@ -1,8 +1,8 @@
-# StakeUp — CLAUDE.md
+# Stru — CLAUDE.md
 
 > Bet on yourself. Get paid when your friends flake.
 
-Canonical reference for the entire StakeUp build. All architecture decisions, flows, schemas, and constraints live here. When in doubt, this file wins.
+Canonical reference for the entire Stru build. All architecture decisions, flows, schemas, and constraints live here. When in doubt, this file wins.
 
 ---
 
@@ -69,7 +69,7 @@ Canonical reference for the entire StakeUp build. All architecture decisions, fl
 ## 4. Project Structure
 
 ```
-setUp/
+stru/
 ├── CLAUDE.md
 ├── Anchor.toml
 ├── Cargo.toml
@@ -77,7 +77,7 @@ setUp/
 ├── .gitignore
 │
 ├── programs/
-│   └── stakeup/
+│   └── stru/
 │       └── src/
 │           ├── lib.rs                  # Program entrypoint, declare_id!, mod exports
 │           ├── instructions/
@@ -121,7 +121,7 @@ setUp/
 │       └── middleware.ts               # x402-express setup, price config
 │
 ├── tests/
-│   └── stakeup.ts                      # Anchor test suite
+│   └── stru.ts                         # Anchor test suite
 │
 └── supabase/
     └── schema.sql                      # Full schema, run once on new Supabase project
@@ -176,7 +176,7 @@ Backend:
   3. Insert into Supabase pools table
   4. Return { pool_id, pool_pda, invite_link }
      ↓
-Invite link: https://app.stakeup.xyz/pool/{pool_id}
+Invite link: https://app.stru.xyz/pool/{pool_id}
 ```
 
 **Goal measurability criteria (all four required):**
@@ -379,7 +379,7 @@ create table badges (
 
 **System prompt:**
 ```
-You are a goal-setting coach for StakeUp, an accountability app.
+You are a goal-setting coach for Stru, an accountability app.
 Your job is to turn vague goals into measurable, verifiable commitments.
 
 A goal is MEASURABLE when it has ALL of:
@@ -413,7 +413,7 @@ ALTERNATIVES:
 
 **System prompt:**
 ```
-You are an evidence verifier for StakeUp. You receive:
+You are an evidence verifier for Stru. You receive:
 - An image or file submitted as proof
 - The goal object the user committed to
 
@@ -473,9 +473,9 @@ All badges are compressed NFTs via Metaplex Bubblegum. Cost ~$0.001 each on devn
 Badge metadata (stored on Arweave or IPFS):
 ```json
 {
-  "name": "StakeUp — First Win",
-  "symbol": "SUP",
-  "description": "Completed a StakeUp goal pool",
+  "name": "Stru — First Win",
+  "symbol": "STRU",
+  "description": "Completed a Stru goal pool",
   "attributes": [
     { "trait_type": "badge_type", "value": "FIRST_WIN" },
     { "trait_type": "goal", "value": "12 gym sessions" },
@@ -526,7 +526,7 @@ VERIFY_PRICE_USDC=0.02
 anchor build                             # Compile Rust program
 anchor test                              # Run tests against localnet
 anchor deploy --provider.cluster devnet  # Deploy to devnet
-anchor idl init --filepath target/idl/stakeup.json <PROGRAM_ID> --provider.cluster devnet
+anchor idl init --filepath target/idl/stru.json <PROGRAM_ID> --provider.cluster devnet
 
 # ── Frontend ─────────────────────────────────────
 cd app
@@ -604,7 +604,7 @@ These are intentional constraints, not bugs. Do not add complexity beyond this l
 
 [2:20] Show Supabase dashboard — pools, evidence, badges rows live.
 
-[2:30] End card: StakeUp. Bet on yourself.
+[2:30] End card: Stru. Bet on yourself.
 ```
 
 ---

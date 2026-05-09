@@ -1,4 +1,4 @@
--- StakeUp Supabase Schema
+-- Stru Supabase Schema
 -- Run this once in the Supabase SQL editor
 
 create table users (

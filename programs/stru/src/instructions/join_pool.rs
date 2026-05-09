@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::state::{Pool, Participant};
-use crate::errors::StakeUpError;
+use crate::errors::StruError;
 
 #[derive(Accounts)]
 pub struct JoinPool<'info> {
@@ -39,8 +39,8 @@ pub fn handler(ctx: Context<JoinPool>) -> Result<()> {
     let clock = Clock::get()?;
     let pool = &mut ctx.accounts.pool;
 
-    require!(!pool.settled, StakeUpError::PoolAlreadySettled);
-    require!(clock.unix_timestamp < pool.deadline, StakeUpError::PoolExpired);
+    require!(!pool.settled, StruError::PoolAlreadySettled);
+    require!(clock.unix_timestamp < pool.deadline, StruError::PoolExpired);
 
     let participant = &mut ctx.accounts.participant;
     participant.wallet = ctx.accounts.participant_wallet.key();

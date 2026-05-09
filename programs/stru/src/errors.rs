@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum StakeUpError {
+pub enum StruError {
     #[msg("Pool is already settled")]
     PoolAlreadySettled,
     #[msg("Pool deadline has not been reached yet")]
