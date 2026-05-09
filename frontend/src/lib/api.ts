@@ -130,7 +130,13 @@ export const api = {
     stake_amount: number;
     duration_secs: number;
     creator_wallet: string;
-  }): Promise<{ pool_id: string; pool_pda: string; invite_link: string; goal_hash: number[]; pool_id_u64: number }> {
+  }): Promise<{
+    pool_id: string;
+    pool_pda: string;
+    invite_link: string;
+    goal_hash: number[];
+    pool_id_u64: number;
+  }> {
     return request("/goal/create", {
       method: "POST",
       body: JSON.stringify(input),
