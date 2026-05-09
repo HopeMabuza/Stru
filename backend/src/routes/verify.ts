@@ -11,6 +11,40 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+const EVIDENCE_BUCKET = process.env.SUPABASE_EVIDENCE_BUCKET || 'evidence';
+
+function isBucketNotFound(error: unknown): boolean {
+  const fields = error as { message?: string; statusCode?: string; status?: number };
+  return (
+    fields?.statusCode === '404' ||
+    fields?.status === 404 ||
+    /bucket not found/i.test(fields?.message || String(error))
+  );
+}
+
+async function uploadEvidenceFile(fileName: string, file: Express.Multer.File) {
+  const upload = () =>
+    supabase.storage
+      .from(EVIDENCE_BUCKET)
+      .upload(fileName, file.buffer, { contentType: file.mimetype, upsert: true });
+
+  let { data, error } = await upload();
+  if (error && isBucketNotFound(error)) {
+    console.warn(`Supabase storage bucket "${EVIDENCE_BUCKET}" not found; creating it now.`);
+    const { error: createError } = await supabase.storage.createBucket(EVIDENCE_BUCKET, {
+      public: true,
+    });
+
+    if (createError && !/already exists/i.test(createError.message)) {
+      throw createError;
+    }
+
+    ({ data, error } = await upload());
+  }
+
+  if (error) throw error;
+  return data;
+}
 
 // POST /verify — multipart: file, pool_id, wallet_address
 router.post('/', x402Middleware, upload.single('file'), async (req: Request, res: Response) => {
@@ -37,13 +71,9 @@ router.post('/', x402Middleware, upload.single('file'), async (req: Request, res
 
     // Upload evidence file to Supabase Storage
     const fileName = `${pool_id}/${wallet_address}/${Date.now()}_${req.file.originalname}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('evidence')
-      .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+    await uploadEvidenceFile(fileName, req.file);
 
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage.from('evidence').getPublicUrl(fileName);
+    const { data: { publicUrl } } = supabase.storage.from(EVIDENCE_BUCKET).getPublicUrl(fileName);
 
     // Run AI verification
     const verdict = await verifyEvidence(req.file.buffer, req.file.mimetype, pool.goal_json);

@@ -1,7 +1,7 @@
-@import "tailwindcss" source(none);
-@source "../src";
-@import "tw-animate-css";
 @import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap");
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 

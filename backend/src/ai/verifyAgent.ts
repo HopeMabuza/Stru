@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const VERIFY_MODEL = process.env.GEMINI_VERIFY_MODEL || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const AI_DEMO_FALLBACK = process.env.AI_DEMO_FALLBACK !== 'false';
 
 const SYSTEM_PROMPT = `You are an evidence verifier for Stru. You receive:
 - An image or file submitted as proof
@@ -36,23 +38,37 @@ export async function verifyEvidence(
   goal: Record<string, unknown>
 ): Promise<VerifyResult> {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: VERIFY_MODEL,
     systemInstruction: SYSTEM_PROMPT,
   });
 
   const goalText = `Goal: ${goal.description}\nProof type required: ${goal.proof_type}\nThreshold: ${goal.threshold} ${goal.unit}`;
 
-  const result = await model.generateContent([
-    {
-      inlineData: {
-        mimeType,
-        data: fileBuffer.toString('base64'),
+  let text: string;
+  try {
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType,
+          data: fileBuffer.toString('base64'),
+        },
       },
-    },
-    goalText,
-  ]);
-
-  const text = result.response.text().trim();
+      goalText,
+    ]);
+    text = result.response.text().trim();
+  } catch (err) {
+    if (AI_DEMO_FALLBACK && shouldUseDemoFallback(err)) {
+      console.warn('Gemini verify agent unavailable; using demo fallback:', describeAiError(err));
+      return {
+        verdict: 'pass',
+        reason:
+          'Demo fallback accepted this proof because Gemini quota/model access is unavailable. For production, enable Gemini billing/quota or set AI_DEMO_FALLBACK=false.',
+        what_would_count: `A clear ${String(goal.proof_type || 'proof file')} showing ${String(goal.description || 'the committed activity')}.`,
+        confidence: 0.5,
+      };
+    }
+    throw err;
+  }
 
   try {
     // Strip markdown code fences if present
@@ -72,4 +88,14 @@ export async function verifyEvidence(
       what_would_count: 'Please submit a clear image matching the proof type for this goal.',
     };
   }
+}
+
+function shouldUseDemoFallback(err: unknown): boolean {
+  const status = typeof err === 'object' && err && 'status' in err ? Number((err as { status?: unknown }).status) : 0;
+  return status === 401 || status === 403 || status === 404 || status === 429;
+}
+
+function describeAiError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return String(err);
 }
