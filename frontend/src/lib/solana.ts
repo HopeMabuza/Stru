@@ -15,6 +15,26 @@ const USDC_DECIMALS = 6;
 
 export const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
+function parsePublicKey(value: string, label: string): PublicKey {
+  const normalized = value?.trim();
+
+  if (!normalized) {
+    throw new Error(`${label} is missing.`);
+  }
+
+  if (normalized === "pending") {
+    throw new Error(
+      `${label} is still pending. This pool is missing a finalized on-chain address.`,
+    );
+  }
+
+  try {
+    return new PublicKey(normalized);
+  } catch {
+    throw new Error(`${label} is invalid. Expected a base58 Solana address.`);
+  }
+}
+
 function getProgram(walletPubkey: PublicKey) {
   const wallet = {
     publicKey: walletPubkey,
@@ -78,8 +98,8 @@ export async function onChainCreatePool(params: {
   durationSecs: number;
   poolIdU64: number;
 }): Promise<string> {
-  const walletPubkey = new PublicKey(params.walletAddress);
-  const poolPda = new PublicKey(params.poolPda);
+  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(params.poolPda, "Pool address");
   const vaultPda = getVaultPda(poolPda);
   const creatorTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
 
@@ -112,8 +132,8 @@ export async function onChainJoinPool(params: {
   walletAddress: string;
   poolPda: string;
 }): Promise<string> {
-  const walletPubkey = new PublicKey(params.walletAddress);
-  const poolPda = new PublicKey(params.poolPda);
+  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(params.poolPda, "Pool address");
   const vaultPda = getVaultPda(poolPda);
   const participantPda = getParticipantPda(poolPda, walletPubkey);
   const participantTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
@@ -141,8 +161,8 @@ export async function onChainSettlePool(params: {
   walletAddress: string;
   poolPda: string;
 }): Promise<string> {
-  const walletPubkey = new PublicKey(params.walletAddress);
-  const poolPda = new PublicKey(params.poolPda);
+  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(params.poolPda, "Pool address");
   const vaultPda = getVaultPda(poolPda);
 
   const program = getProgram(walletPubkey);
@@ -163,8 +183,8 @@ export async function onChainClaim(params: {
   walletAddress: string;
   poolPda: string;
 }): Promise<string> {
-  const walletPubkey = new PublicKey(params.walletAddress);
-  const poolPda = new PublicKey(params.poolPda);
+  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(params.poolPda, "Pool address");
   const vaultPda = getVaultPda(poolPda);
   const participantPda = getParticipantPda(poolPda, walletPubkey);
   const winnerTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
