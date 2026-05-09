@@ -12,6 +12,7 @@ import IDL from "./stru_idl.json";
 const PROGRAM_ID = new PublicKey("JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y");
 const USDC_MINT = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
 const USDC_DECIMALS = 6;
+const textEncoder = new TextEncoder();
 
 export const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
@@ -49,7 +50,7 @@ function getProgram(walletPubkey: PublicKey) {
 
 function getVaultPda(poolPda: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("vault"), poolPda.toBuffer()],
+    [textEncoder.encode("vault"), poolPda.toBuffer()],
     PROGRAM_ID,
   );
   return pda;
@@ -57,7 +58,7 @@ function getVaultPda(poolPda: PublicKey): PublicKey {
 
 function getParticipantPda(poolPda: PublicKey, wallet: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("participant"), poolPda.toBuffer(), wallet.toBuffer()],
+    [textEncoder.encode("participant"), poolPda.toBuffer(), wallet.toBuffer()],
     PROGRAM_ID,
   );
   return pda;
