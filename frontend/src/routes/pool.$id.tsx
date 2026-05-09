@@ -122,7 +122,7 @@ function PoolPage() {
                 )}
             </div>
 
-            <ClaimButton pool={pool} participants={participants} wallet={wallet} />
+            <ClaimButton pool={pool} participants={participants} wallet={wallet} onChanged={load} />
           </>
         )}
       </main>

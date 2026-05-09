@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Clock, Coins, Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, type ParticipantRow, type PoolRow } from "@/lib/api";
+import { onChainJoinPool } from "@/lib/solana";
 
 interface Props {
   pool: PoolRow;
@@ -54,6 +55,9 @@ export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) 
     setJoining(true);
     setError(null);
     try {
+      // Sign + send the on-chain join_pool transaction first
+      await onChainJoinPool({ walletAddress: wallet, poolPda: pool.program_pda });
+      // Then record the join in Supabase
       await api.joinPool(pool.id, wallet);
       onChanged?.();
     } catch (e) {

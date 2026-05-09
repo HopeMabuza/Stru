@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::state::Pool;
 
 #[derive(Accounts)]
@@ -17,17 +17,21 @@ pub struct CreatePool<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
 
+    /// USDC mint
+    pub mint: Account<'info, Mint>,
+
     /// Creator's USDC token account (source)
-    #[account(mut)]
+    #[account(mut, token::mint = mint)]
     pub creator_token_account: Account<'info, TokenAccount>,
 
     /// Pool vault — holds all staked USDC
     #[account(
-        mut,
+        init,
+        payer = creator,
         seeds = [b"vault", pool.key().as_ref()],
         bump,
-        token::mint = creator_token_account.mint,
-        token::authority = pool,
+        token::mint = mint,
+        token::authority = pool_vault,
     )]
     pub pool_vault: Account<'info, TokenAccount>,
 

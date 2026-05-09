@@ -1,9 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { chatWithGoalAgent } from '../ai/goalAgent';
 import { createClient } from '@supabase/supabase-js';
-import * as anchor from '@coral-xyz/anchor';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import bs58 from 'bs58';
+import { PublicKey } from '@solana/web3.js';
 import crypto from 'crypto';
 
 const router = Router();
@@ -77,16 +75,27 @@ router.post('/create', async (req: Request, res: Response) => {
       creatorId = newUser.id;
     }
 
+    // Compute the on-chain pool PDA so we can store it in Supabase now
+    const poolIdU64 = Date.now(); // u64 seed; safe as JS number (< 2^53)
+    const programId = new PublicKey(process.env.PROGRAM_ID!);
+    const creatorPubkey = new PublicKey(creator_wallet);
+    const poolIdBuf = Buffer.alloc(8);
+    poolIdBuf.writeBigUInt64LE(BigInt(poolIdU64));
+    const [poolPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('pool'), creatorPubkey.toBuffer(), poolIdBuf],
+      programId,
+    );
+
     // Insert pool into Supabase first to get UUID
     const deadline = new Date(Date.now() + duration_secs * 1000);
     const { data: poolRow, error: dbError } = await supabase
       .from('pools')
       .insert({
-        program_pda: 'pending',
+        program_pda: poolPda.toBase58(),
         goal_text: goal.description,
         goal_json: goal,
         stake_amount,
-        budget: stake_amount * 0.1, // 10% of stake as default verification budget
+        budget: stake_amount * 0.1,
         deadline: deadline.toISOString(),
         status: 'active',
         creator_id: creatorId,
@@ -104,15 +113,12 @@ router.post('/create', async (req: Request, res: Response) => {
       .from('participants')
       .insert({ pool_id: poolId, wallet_address: creator_wallet, status: 'pending' });
 
-    // TODO: call Anchor create_pool instruction here with the oracle keypair
-    // For now return the pool_id and invite link so the frontend can proceed
-    // The frontend will call the on-chain instruction directly via Privy wallet
-
     return res.json({
       pool_id: poolId,
-      pool_pda: 'pending_anchor_deploy',
+      pool_pda: poolPda.toBase58(),
       invite_link: inviteLink,
       goal_hash: goalHash,
+      pool_id_u64: poolIdU64, // frontend uses this to sign the create_pool instruction
     });
   } catch (err) {
     console.error('goal/create error:', err);

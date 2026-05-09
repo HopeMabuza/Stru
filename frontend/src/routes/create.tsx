@@ -6,6 +6,7 @@ import { GoalChat } from "@/components/GoalChat";
 import { WalletButton } from "@/components/WalletButton";
 import { api, type Goal } from "@/lib/api";
 import { useWallet } from "@/lib/wallet";
+import { onChainCreatePool } from "@/lib/solana";
 
 export const Route = createFileRoute("/create")({
   head: () => ({
@@ -49,6 +50,16 @@ function CreatePage() {
         stake_amount: stake,
         duration_secs: durationMins * 60,
         creator_wallet: wallet,
+      });
+      // Sign + send the on-chain create_pool transaction via Phantom
+      await onChainCreatePool({
+        walletAddress: wallet,
+        poolPda: res.pool_pda,
+        goalHash: res.goal_hash,
+        stakeUsdc: stake,
+        budgetUsdc: stake * 0.1,
+        durationSecs: durationMins * 60,
+        poolIdU64: res.pool_id_u64,
       });
       navigate({ to: "/pool/$id", params: { id: res.pool_id } });
     } catch (e) {

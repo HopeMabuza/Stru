@@ -123,4 +123,35 @@ router.post('/:id/join', async (req: Request, res: Response) => {
   }
 });
 
+// POST /pool/:id/settle — called by frontend after on-chain settle_pool tx confirms
+router.post('/:id/settle', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const { data: pool, error: poolError } = await supabase
+      .from('pools')
+      .select('id, status')
+      .eq('id', id)
+      .single();
+
+    if (poolError || !pool) {
+      return res.status(404).json({ error: 'Pool not found' });
+    }
+    if (pool.status !== 'active') {
+      return res.status(400).json({ error: 'Pool is not active' });
+    }
+
+    const { error } = await supabase
+      .from('pools')
+      .update({ status: 'settled' })
+      .eq('id', id);
+
+    if (error) throw error;
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('pool/settle error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

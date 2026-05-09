@@ -130,7 +130,7 @@ export const api = {
     stake_amount: number;
     duration_secs: number;
     creator_wallet: string;
-  }): Promise<{ pool_id: string; pool_pda: string; invite_link: string; goal_hash: number[] }> {
+  }): Promise<{ pool_id: string; pool_pda: string; invite_link: string; goal_hash: number[]; pool_id_u64: number }> {
     return request("/goal/create", {
       method: "POST",
       body: JSON.stringify(input),
@@ -151,6 +151,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ wallet_address }),
     });
+  },
+
+  settlePool(id: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/pool/${id}/settle`, { method: "POST" });
   },
 
   // Multipart upload — do not set content-type header, browser sets boundary.

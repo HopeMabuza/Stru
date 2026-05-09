@@ -3,9 +3,41 @@ import multer from 'multer';
 import { verifyEvidence } from '../ai/verifyAgent';
 import { x402Middleware } from '../x402/middleware';
 import { createClient } from '@supabase/supabase-js';
+import * as anchor from '@coral-xyz/anchor';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import bs58 from 'bs58';
+import IDL from '../../../target/idl/stakeup.json';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+async function callMarkComplete(poolPdaStr: string, walletAddress: string) {
+  if (!process.env.ORACLE_WALLET_PRIVATE_KEY || !process.env.PROGRAM_ID) return;
+  try {
+    const connection = new Connection(process.env.ANCHOR_PROVIDER_URL!, 'confirmed');
+    const oracleKeypair = Keypair.fromSecretKey(bs58.decode(process.env.ORACLE_WALLET_PRIVATE_KEY));
+    const wallet = new anchor.Wallet(oracleKeypair);
+    const provider = new anchor.AnchorProvider(connection, wallet, { commitment: 'confirmed' });
+    const program = new anchor.Program(IDL as unknown as anchor.Idl, provider);
+
+    const poolPda = new PublicKey(poolPdaStr);
+    const walletKey = new PublicKey(walletAddress);
+    const [participantPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('participant'), poolPda.toBuffer(), walletKey.toBuffer()],
+      program.programId,
+    );
+
+    await program.methods
+      .markComplete()
+      .accounts({ pool: poolPda, participant: participantPda, oracle: oracleKeypair.publicKey })
+      .signers([oracleKeypair])
+      .rpc();
+
+    console.log(`mark_complete called for ${walletAddress} in pool ${poolPdaStr}`);
+  } catch (err) {
+    console.error('mark_complete error (non-fatal):', err);
+  }
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -89,7 +121,7 @@ router.post('/', x402Middleware, upload.single('file'), async (req: Request, res
       confidence: verdict.confidence ?? null,
     });
 
-    // On pass: update participant status and call mark_complete
+    // On pass: update participant status and call mark_complete on-chain
     if (verdict.verdict === 'pass') {
       await supabase
         .from('participants')
@@ -97,8 +129,16 @@ router.post('/', x402Middleware, upload.single('file'), async (req: Request, res
         .eq('pool_id', pool_id)
         .eq('wallet_address', wallet_address);
 
-      // TODO: call Anchor mark_complete instruction via oracle keypair
-      // This requires the program to be deployed and PROGRAM_ID set in .env
+      // Fetch the pool PDA from Supabase then call mark_complete via oracle
+      const { data: poolRow } = await supabase
+        .from('pools')
+        .select('program_pda')
+        .eq('id', pool_id)
+        .single();
+
+      if (poolRow?.program_pda && poolRow.program_pda !== 'pending') {
+        void callMarkComplete(poolRow.program_pda, wallet_address);
+      }
     }
 
     return res.json(verdict);

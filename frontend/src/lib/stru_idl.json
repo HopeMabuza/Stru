@@ -1,0 +1,693 @@
+{
+  "address": "JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y",
+  "metadata": {
+    "name": "stru",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Stru — on-chain goal accountability pools"
+  },
+  "instructions": [
+    {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "participant",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  105,
+                  99,
+                  105,
+                  112,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "winner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "winner_token_account",
+          "writable": true
+        },
+        {
+          "name": "winner",
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_pool",
+      "discriminator": [
+        233,
+        146,
+        209,
+        142,
+        207,
+        104,
+        64,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "pool_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "USDC mint"
+          ]
+        },
+        {
+          "name": "creator_token_account",
+          "docs": [
+            "Creator's USDC token account (source)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "pool_vault",
+          "docs": [
+            "Pool vault — holds all staked USDC"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "goal_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "stake_amount",
+          "type": "u64"
+        },
+        {
+          "name": "verification_budget",
+          "type": "u64"
+        },
+        {
+          "name": "duration_secs",
+          "type": "i64"
+        },
+        {
+          "name": "pool_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "join_pool",
+      "discriminator": [
+        14,
+        65,
+        62,
+        16,
+        116,
+        17,
+        195,
+        107
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "participant",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  105,
+                  99,
+                  105,
+                  112,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "participant_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "participant_wallet",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "participant_token_account",
+          "writable": true
+        },
+        {
+          "name": "pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mark_complete",
+      "discriminator": [
+        11,
+        59,
+        70,
+        209,
+        167,
+        193,
+        65,
+        47
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "participant",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  105,
+                  99,
+                  105,
+                  112,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "participant.wallet",
+                "account": "Participant"
+              }
+            ]
+          }
+        },
+        {
+          "name": "oracle",
+          "docs": [
+            "Oracle signer — must match ORACLE_PUBKEY"
+          ],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mint_badge",
+      "discriminator": [
+        242,
+        234,
+        237,
+        183,
+        232,
+        245,
+        146,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "oracle",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "badge_type",
+          "type": "string"
+        },
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "pool_id",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "settle_pool",
+      "discriminator": [
+        186,
+        11,
+        231,
+        111,
+        242,
+        241,
+        203,
+        64
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "pool_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Participant",
+      "discriminator": [
+        32,
+        142,
+        108,
+        79,
+        247,
+        179,
+        54,
+        6
+      ]
+    },
+    {
+      "name": "Pool",
+      "discriminator": [
+        241,
+        154,
+        109,
+        4,
+        17,
+        177,
+        109,
+        188
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BadgeMinted",
+      "discriminator": [
+        53,
+        227,
+        68,
+        72,
+        115,
+        78,
+        25,
+        14
+      ]
+    },
+    {
+      "name": "PoolSettled",
+      "discriminator": [
+        71,
+        220,
+        136,
+        147,
+        65,
+        185,
+        90,
+        47
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "PoolAlreadySettled",
+      "msg": "Pool is already settled"
+    },
+    {
+      "code": 6001,
+      "name": "DeadlineNotReached",
+      "msg": "Pool deadline has not been reached yet"
+    },
+    {
+      "code": 6002,
+      "name": "PoolExpired",
+      "msg": "Pool deadline has passed"
+    },
+    {
+      "code": 6003,
+      "name": "Unauthorized",
+      "msg": "Caller is not authorized"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyCompleted",
+      "msg": "Participant has already been marked complete"
+    },
+    {
+      "code": 6005,
+      "name": "NotCompleted",
+      "msg": "Participant has not completed the goal"
+    },
+    {
+      "code": 6006,
+      "name": "PoolNotSettled",
+      "msg": "Pool is not settled yet"
+    },
+    {
+      "code": 6007,
+      "name": "NoWinners",
+      "msg": "No winners in this pool"
+    }
+  ],
+  "types": [
+    {
+      "name": "BadgeMinted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "badge_type",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Participant",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "completed",
+            "type": "bool"
+          },
+          {
+            "name": "joined_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "goal_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "stake_amount",
+            "type": "u64"
+          },
+          {
+            "name": "verification_budget",
+            "type": "u64"
+          },
+          {
+            "name": "budget_spent",
+            "type": "u64"
+          },
+          {
+            "name": "yield_accumulated",
+            "type": "u64"
+          },
+          {
+            "name": "total_staked",
+            "type": "u64"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "participant_count",
+            "type": "u8"
+          },
+          {
+            "name": "completed_count",
+            "type": "u8"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PoolSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "completed_count",
+            "type": "u8"
+          },
+          {
+            "name": "participant_count",
+            "type": "u8"
+          },
+          {
+            "name": "total_staked",
+            "type": "u64"
+          },
+          {
+            "name": "budget_spent",
+            "type": "u64"
+          },
+          {
+            "name": "yield_accumulated",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}
