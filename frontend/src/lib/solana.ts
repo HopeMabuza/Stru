@@ -99,6 +99,58 @@ function simulationMessage(logs?: string[] | null): string | null {
   return null;
 }
 
+const USDC_FAUCET_HINT = `Get devnet USDC at https://faucet.circle.com — make sure to select "Solana Devnet" and use mint ${USDC_MINT.toBase58()}.`;
+
+async function checkUsdcTokenAccount(
+  tokenAccountAddress: PublicKey,
+  requiredLamports: bigint,
+  action: "creating a pool" | "joining",
+): Promise<void> {
+  let tokenAccount;
+  try {
+    tokenAccount = await getAccount(connection, tokenAccountAddress, "confirmed");
+  } catch {
+    throw new Error(
+      `Your wallet does not have a devnet USDC token account for ${USDC_MINT.toBase58()}. ` +
+        `Fund it with devnet USDC before ${action}. ${USDC_FAUCET_HINT}`,
+    );
+  }
+
+  if (!tokenAccount.mint.equals(USDC_MINT)) {
+    throw new Error(
+      `Your devnet USDC token account uses a different mint than this app expects (${USDC_MINT.toBase58()}). ` +
+        USDC_FAUCET_HINT,
+    );
+  }
+
+  if (tokenAccount.amount < requiredLamports) {
+    throw new Error(
+      `Your wallet has ${formatUsdcLamports(tokenAccount.amount)} devnet USDC, but ${action} requires ${formatUsdcLamports(requiredLamports)} USDC.`,
+    );
+  }
+}
+
+async function preflightCreatePool(params: {
+  walletPubkey: PublicKey;
+  creatorTokenAccount: PublicKey;
+  stakeUsdc: number;
+  budgetUsdc: number;
+}): Promise<void> {
+  const solBalance = await connection.getBalance(params.walletPubkey, "confirmed");
+  if (solBalance < MIN_JOIN_SOL_LAMPORTS) {
+    throw new Error(
+      "Your wallet needs at least 0.005 devnet SOL for transaction fees and account rent.",
+    );
+  }
+
+  const totalRequired = usdcToLamports(params.stakeUsdc + params.budgetUsdc);
+  await checkUsdcTokenAccount(
+    params.creatorTokenAccount,
+    BigInt(totalRequired.toString()),
+    "creating a pool",
+  );
+}
+
 async function preflightJoinPool(params: {
   walletPubkey: PublicKey;
   poolPda: PublicKey;
@@ -126,24 +178,7 @@ async function preflightJoinPool(params: {
   if (participantAccount) return "already-joined";
 
   const requiredStake = readPoolStakeAmount(poolAccount.data);
-  let tokenAccount;
-  try {
-    tokenAccount = await getAccount(connection, params.participantTokenAccount, "confirmed");
-  } catch {
-    throw new Error(
-      `Your wallet does not have a devnet USDC token account for ${USDC_MINT.toBase58()}. Fund it with devnet USDC before joining.`,
-    );
-  }
-
-  if (!tokenAccount.mint.equals(USDC_MINT)) {
-    throw new Error("Your devnet USDC token account uses the wrong mint for this app.");
-  }
-
-  if (tokenAccount.amount < requiredStake) {
-    throw new Error(
-      `Your wallet has ${formatUsdcLamports(tokenAccount.amount)} devnet USDC, but this pool requires ${formatUsdcLamports(requiredStake)} USDC.`,
-    );
-  }
+  await checkUsdcTokenAccount(params.participantTokenAccount, requiredStake, "joining");
 
   return "needs-join";
 }
@@ -202,6 +237,13 @@ export async function onChainCreatePool(params: {
   const poolPda = parsePublicKey(params.poolPda, "Pool address");
   const vaultPda = getVaultPda(poolPda);
   const creatorTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
+
+  await preflightCreatePool({
+    walletPubkey,
+    creatorTokenAccount,
+    stakeUsdc: params.stakeUsdc,
+    budgetUsdc: params.budgetUsdc,
+  });
 
   const program = getProgram(walletPubkey);
   const tx = await program.methods
