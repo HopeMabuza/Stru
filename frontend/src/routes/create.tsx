@@ -33,8 +33,22 @@ function CreatePage() {
   const [stake, setStake] = useState(10);
   const [durationMins, setDurationMins] = useState(60);
   const [creating, setCreating] = useState(false);
+  const [fauceting, setFauceting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canCreate = Boolean(goal && wallet && stake >= 1 && durationMins >= 5 && !creating);
+
+  async function getTestUsdc() {
+    if (!wallet) return;
+    setFauceting(true);
+    setError(null);
+    try {
+      await api.faucetUsdc(wallet);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Faucet failed");
+    } finally {
+      setFauceting(false);
+    }
+  }
 
   async function create() {
     if (!goal || !wallet) return;
@@ -141,7 +155,24 @@ function CreatePage() {
             </div>
           </div>
 
-          <div className="mt-5">
+          {wallet && (
+            <div className="mt-5">
+              <Button
+                variant="cream"
+                size="sm"
+                disabled={fauceting}
+                onClick={getTestUsdc}
+                className="w-full"
+              >
+                {fauceting ? "Airdropping..." : "Get 100 Test USDC"}
+              </Button>
+              <p className="mt-1 text-xs text-foreground/55">
+                Devnet only — funds your wallet so you can stake.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-3">
             <Button
               variant="hero"
               size="lg"

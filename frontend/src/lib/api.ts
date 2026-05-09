@@ -177,6 +177,13 @@ export const api = {
     return request<{ ok: boolean }>(`/pool/${id}/settle`, { method: "POST" });
   },
 
+  faucetUsdc(wallet: string): Promise<{ success: boolean; amount: number }> {
+    return request("/faucet/usdc", {
+      method: "POST",
+      body: JSON.stringify({ wallet }),
+    });
+  },
+
   // Multipart upload — do not set content-type header, browser sets boundary.
   async verifyEvidence(input: {
     file: File;

@@ -10,6 +10,7 @@ import * as anchor from "@coral-xyz/anchor";
 import IDL from "./stru_idl.json";
 
 const PROGRAM_ID = new PublicKey("JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y");
+// Update this after running: POST /faucet/setup
 const USDC_MINT = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
 const USDC_DECIMALS = 6;
 const POOL_STAKE_OFFSET = 8 + 32 + 32;
