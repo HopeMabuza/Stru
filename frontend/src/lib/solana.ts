@@ -1,3 +1,5 @@
+import "./browser-polyfills";
+
 import {
   Connection,
   PublicKey,
