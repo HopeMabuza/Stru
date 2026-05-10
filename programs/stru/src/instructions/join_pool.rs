@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_lang::system_program::{transfer, Transfer};
 use crate::state::{Pool, Participant};
 use crate::errors::StruError;
 
@@ -20,48 +20,39 @@ pub struct JoinPool<'info> {
     #[account(mut)]
     pub participant_wallet: Signer<'info>,
 
-    #[account(mut)]
-    pub participant_token_account: Account<'info, TokenAccount>,
-
-    #[account(
-        mut,
-        seeds = [b"vault", pool.key().as_ref()],
-        bump,
-    )]
-    pub pool_vault: Account<'info, TokenAccount>,
-
-    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
 
 pub fn handler(ctx: Context<JoinPool>) -> Result<()> {
     let clock = Clock::get()?;
-    let pool = &mut ctx.accounts.pool;
+    let stake_amount = ctx.accounts.pool.stake_amount;
 
-    require!(!pool.settled, StruError::PoolAlreadySettled);
-    require!(clock.unix_timestamp < pool.deadline, StruError::PoolExpired);
+    {
+        let pool = &mut ctx.accounts.pool;
+        require!(!pool.settled, StruError::PoolAlreadySettled);
+        require!(clock.unix_timestamp < pool.deadline, StruError::PoolExpired);
 
-    let participant = &mut ctx.accounts.participant;
-    participant.wallet = ctx.accounts.participant_wallet.key();
-    participant.pool = pool.key();
-    participant.completed = false;
-    participant.joined_at = clock.unix_timestamp;
-    participant.bump = ctx.bumps.participant;
+        let participant = &mut ctx.accounts.participant;
+        participant.wallet = ctx.accounts.participant_wallet.key();
+        participant.pool = pool.key();
+        participant.completed = false;
+        participant.joined_at = clock.unix_timestamp;
+        participant.bump = ctx.bumps.participant;
 
-    pool.participant_count = pool.participant_count.checked_add(1).unwrap();
-    pool.total_staked = pool.total_staked.checked_add(pool.stake_amount).unwrap();
+        pool.participant_count = pool.participant_count.checked_add(1).unwrap();
+        pool.total_staked = pool.total_staked.checked_add(stake_amount).unwrap();
+    }
 
-    token::transfer(
+    transfer(
         CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
             Transfer {
-                from: ctx.accounts.participant_token_account.to_account_info(),
-                to: ctx.accounts.pool_vault.to_account_info(),
-                authority: ctx.accounts.participant_wallet.to_account_info(),
+                from: ctx.accounts.participant_wallet.to_account_info(),
+                to: ctx.accounts.pool.to_account_info(),
             },
         ),
-        pool.stake_amount,
+        stake_amount,
     )?;
 
     Ok(())

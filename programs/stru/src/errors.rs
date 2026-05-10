@@ -18,4 +18,8 @@ pub enum StruError {
     PoolNotSettled,
     #[msg("No winners in this pool")]
     NoWinners,
+    #[msg("Pool escrow does not have enough SOL for this payout")]
+    InsufficientEscrowBalance,
+    #[msg("Arithmetic overflow")]
+    MathOverflow,
 }

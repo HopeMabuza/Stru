@@ -30,19 +30,19 @@ function CreatePage() {
   const wallet = useWallet();
   const navigate = useNavigate();
   const [goal, setGoal] = useState<Goal | null>(null);
-  const [stake, setStake] = useState(10);
+  const [stake, setStake] = useState(0.1);
   const [durationMins, setDurationMins] = useState(60);
   const [creating, setCreating] = useState(false);
   const [fauceting, setFauceting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const canCreate = Boolean(goal && wallet && stake >= 1 && durationMins >= 5 && !creating);
+  const canCreate = Boolean(goal && wallet && stake >= 0.01 && durationMins >= 5 && !creating);
 
-  async function getTestUsdc() {
+  async function getTestSol() {
     if (!wallet) return;
     setFauceting(true);
     setError(null);
     try {
-      await api.faucetUsdc(wallet);
+      await api.faucetSol(wallet);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Faucet failed");
     } finally {
@@ -52,8 +52,8 @@ function CreatePage() {
 
   async function create() {
     if (!goal || !wallet) return;
-    if (stake < 1 || durationMins < 5) {
-      setError("Stake must be at least 1 USDC and duration must be at least 5 minutes.");
+    if (stake < 0.01 || durationMins < 5) {
+      setError("Stake must be at least 0.01 SOL and duration must be at least 5 minutes.");
       return;
     }
     setCreating(true);
@@ -72,8 +72,8 @@ function CreatePage() {
         walletAddress: wallet,
         poolPda: res.pool_pda,
         goalHash: res.goal_hash,
-        stakeUsdc: stake,
-        budgetUsdc: stake * 0.1,
+        stakeSol: stake,
+        budgetSol: stake * 0.1,
         durationSecs: durationMins * 60,
         poolIdU64: res.pool_id_u64,
       });
@@ -123,12 +123,12 @@ function CreatePage() {
           </div>
 
           <label htmlFor="stake" className="mt-4 block text-sm font-medium">
-            Stake per person (USDC)
+            Stake per person (SOL)
           </label>
           <input
             id="stake"
             type="number"
-            min={1}
+            min={0.01}
             step="0.01"
             value={stake}
             onChange={(e) => setStake(Math.max(0, parseFloat(e.target.value || "0")))}
@@ -161,10 +161,10 @@ function CreatePage() {
                 variant="cream"
                 size="sm"
                 disabled={fauceting}
-                onClick={getTestUsdc}
+                onClick={getTestSol}
                 className="w-full"
               >
-                {fauceting ? "Airdropping..." : "Get 100 Test USDC"}
+                {fauceting ? "Airdropping..." : "Get 2 Devnet SOL"}
               </Button>
               <p className="mt-1 text-xs text-foreground/55">
                 Devnet only — funds your wallet so you can stake.

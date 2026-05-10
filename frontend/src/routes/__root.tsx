@@ -76,7 +76,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Create friend-group accountability pools, stake USDC, submit proof, and let an AI referee verify who gets paid.",
+          "Create friend-group accountability pools, stake devnet SOL, submit proof, and let an AI referee verify who gets paid.",
       },
       { name: "author", content: "Stru" },
       { name: "theme-color", content: "#f7f0d8" },
@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Friend-group goal accountability with USDC stakes, AI verification, and Solana escrow.",
+          "Friend-group goal accountability with devnet SOL stakes, AI verification, and Solana escrow.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

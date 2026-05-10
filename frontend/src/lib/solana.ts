@@ -5,7 +5,6 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, getAccount, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 import IDL from "./stru_idl.json";
 
@@ -15,16 +14,13 @@ function envOrFallback(value: unknown, fallback: string): string {
 }
 
 const PROGRAM_ID = new PublicKey(
-  envOrFallback(import.meta.env.VITE_PROGRAM_ID, "JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y"),
-);
-const USDC_MINT = new PublicKey(
-  envOrFallback(import.meta.env.VITE_USDC_MINT_ADDRESS, "9kPfQwG5T2vBeWcBMjHSYu6iPGpkHfQxFPA3jQUCDVMi"),
+  envOrFallback(import.meta.env.VITE_PROGRAM_ID, "qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf"),
 );
 const SOLANA_RPC_URL = envOrFallback(
   import.meta.env.VITE_SOLANA_RPC_URL,
   "https://api.devnet.solana.com",
 );
-const USDC_DECIMALS = 6;
+const SOL_DECIMALS = 9;
 const POOL_STAKE_OFFSET = 8 + 32 + 32;
 const MIN_CREATE_SOL_LAMPORTS = 20_000_000;
 const MIN_JOIN_SOL_LAMPORTS = 5_000_000;
@@ -64,14 +60,6 @@ function getProgram(walletPubkey: PublicKey) {
   return new anchor.Program(IDL as unknown as anchor.Idl, provider);
 }
 
-function getVaultPda(poolPda: PublicKey): PublicKey {
-  const [pda] = PublicKey.findProgramAddressSync(
-    [textEncoder.encode("vault"), poolPda.toBuffer()],
-    PROGRAM_ID,
-  );
-  return pda;
-}
-
 function getParticipantPda(poolPda: PublicKey, wallet: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [textEncoder.encode("participant"), poolPda.toBuffer(), wallet.toBuffer()],
@@ -80,17 +68,17 @@ function getParticipantPda(poolPda: PublicKey, wallet: PublicKey): PublicKey {
   return pda;
 }
 
-function usdcToLamports(usdc: number): anchor.BN {
-  return new anchor.BN(Math.round(usdc * 10 ** USDC_DECIMALS));
+function solToLamports(sol: number): anchor.BN {
+  return new anchor.BN(Math.round(sol * 10 ** SOL_DECIMALS));
 }
 
-function usdcToLamportsBigInt(usdc: number): bigint {
-  return BigInt(Math.round(usdc * 10 ** USDC_DECIMALS));
+function solToLamportsBigInt(sol: number): bigint {
+  return BigInt(Math.round(sol * 10 ** SOL_DECIMALS));
 }
 
-function formatUsdcLamports(lamports: bigint): string {
-  const whole = lamports / 1_000_000n;
-  const fraction = (lamports % 1_000_000n).toString().padStart(6, "0").replace(/0+$/, "");
+function formatSolLamports(lamports: bigint): string {
+  const whole = lamports / 1_000_000_000n;
+  const fraction = (lamports % 1_000_000_000n).toString().padStart(9, "0").replace(/0+$/, "");
   return fraction ? `${whole}.${fraction}` : whole.toString();
 }
 
@@ -106,7 +94,7 @@ function simulationMessage(logs?: string[] | null): string | null {
   const text = logs?.join("\n").toLowerCase() ?? "";
   if (!text) return null;
   if (text.includes("insufficient funds") || text.includes("attempt to debit")) {
-    return "Transaction simulation failed because the wallet does not have enough devnet SOL or USDC.";
+    return "Transaction simulation failed because the wallet does not have enough devnet SOL.";
   }
   if (text.includes("accountnotinitialized") || text.includes("account not initialized")) {
     return "Transaction simulation failed because a required on-chain account is not initialized.";
@@ -117,78 +105,33 @@ function simulationMessage(logs?: string[] | null): string | null {
   return null;
 }
 
-const USDC_FAUCET_HINT =
-  `Use the app's "Get 100 Test USDC" button, or mint/send the custom devnet token ` +
-  `${USDC_MINT.toBase58()}. If Phantom shows a balance for a different token mint, ` +
-  "the pool cannot use it.";
-
-async function checkUsdcTokenAccount(
-  tokenAccountAddress: PublicKey,
-  requiredLamports: bigint,
-  action: "creating a pool" | "joining",
-): Promise<void> {
-  let tokenAccount;
-  try {
-    tokenAccount = await getAccount(connection, tokenAccountAddress, "confirmed");
-  } catch {
-    throw new Error(
-      `Your wallet does not have a devnet USDC token account for ${USDC_MINT.toBase58()}. ` +
-        `Fund it with devnet USDC before ${action}. ${USDC_FAUCET_HINT}`,
-    );
-  }
-
-  if (!tokenAccount.mint.equals(USDC_MINT)) {
-    throw new Error(
-      `Your devnet USDC token account uses a different mint than this app expects (${USDC_MINT.toBase58()}). ` +
-        USDC_FAUCET_HINT,
-    );
-  }
-
-  if (tokenAccount.amount < requiredLamports) {
-    throw new Error(
-      `Your wallet has ${formatUsdcLamports(tokenAccount.amount)} devnet USDC, but ${action} requires ${formatUsdcLamports(requiredLamports)} USDC.`,
-    );
-  }
-}
-
 async function preflightCreatePool(params: {
   walletPubkey: PublicKey;
-  creatorTokenAccount: PublicKey;
-  stakeUsdc: number;
-  budgetUsdc: number;
+  stakeSol: number;
+  budgetSol: number;
 }): Promise<void> {
   const solBalance = await connection.getBalance(params.walletPubkey, "confirmed");
-  if (solBalance < MIN_JOIN_SOL_LAMPORTS) {
+  const totalRequired = solToLamportsBigInt(params.stakeSol + params.budgetSol);
+  const minimumBalance = totalRequired + BigInt(MIN_CREATE_SOL_LAMPORTS);
+
+  if (BigInt(solBalance) < minimumBalance) {
     throw new Error(
-      "Your wallet needs at least 0.005 devnet SOL for transaction fees and account rent.",
+      `Your wallet has ${formatSolLamports(BigInt(solBalance))} SOL, but creating a pool requires ` +
+        `${formatSolLamports(totalRequired)} SOL plus a small fee/rent buffer.`,
     );
   }
-
-  const totalRequired = usdcToLamports(params.stakeUsdc + params.budgetUsdc);
-  await checkUsdcTokenAccount(
-    params.creatorTokenAccount,
-    BigInt(totalRequired.toString()),
-    "creating a pool",
-  );
 }
 
 async function preflightJoinPool(params: {
   walletPubkey: PublicKey;
   poolPda: PublicKey;
   participantPda: PublicKey;
-  participantTokenAccount: PublicKey;
 }): Promise<"needs-join" | "already-joined"> {
   const [solBalance, poolAccount, participantAccount] = await Promise.all([
     connection.getBalance(params.walletPubkey, "confirmed"),
     connection.getAccountInfo(params.poolPda, "confirmed"),
     connection.getAccountInfo(params.participantPda, "confirmed"),
   ]);
-
-  if (solBalance < MIN_JOIN_SOL_LAMPORTS) {
-    throw new Error(
-      "Your wallet needs at least 0.005 devnet SOL for join transaction fees and account rent.",
-    );
-  }
 
   if (!poolAccount) {
     throw new Error(
@@ -199,7 +142,13 @@ async function preflightJoinPool(params: {
   if (participantAccount) return "already-joined";
 
   const requiredStake = readPoolStakeAmount(poolAccount.data);
-  await checkUsdcTokenAccount(params.participantTokenAccount, requiredStake, "joining");
+  const minimumBalance = requiredStake + BigInt(MIN_JOIN_SOL_LAMPORTS);
+  if (BigInt(solBalance) < minimumBalance) {
+    throw new Error(
+      `Your wallet has ${formatSolLamports(BigInt(solBalance))} SOL, but joining requires ` +
+        `${formatSolLamports(requiredStake)} SOL plus a small fee/rent buffer.`,
+    );
+  }
 
   return "needs-join";
 }
@@ -237,7 +186,7 @@ async function buildAndSend(tx: Transaction, walletPubkey: PublicKey): Promise<s
     const message = e instanceof Error ? e.message : String(e);
     if (/unexpected error/i.test(message)) {
       throw new Error(
-        "Phantom could not send the transaction. Make sure Phantom is connected to Solana devnet and the wallet has enough devnet SOL and USDC.",
+        "Phantom could not send the transaction. Make sure Phantom is connected to Solana devnet and the wallet has enough devnet SOL.",
       );
     }
     throw e;
@@ -249,39 +198,32 @@ export async function onChainCreatePool(params: {
   walletAddress: string;
   poolPda: string;
   goalHash: number[];
-  stakeUsdc: number;
-  budgetUsdc: number;
+  stakeSol: number;
+  budgetSol: number;
   durationSecs: number;
   poolIdU64: number;
 }): Promise<string> {
   const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
   const poolPda = parsePublicKey(params.poolPda, "Pool address");
-  const vaultPda = getVaultPda(poolPda);
-  const creatorTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
 
   await preflightCreatePool({
     walletPubkey,
-    creatorTokenAccount,
-    stakeUsdc: params.stakeUsdc,
-    budgetUsdc: params.budgetUsdc,
+    stakeSol: params.stakeSol,
+    budgetSol: params.budgetSol,
   });
 
   const program = getProgram(walletPubkey);
   const tx = await program.methods
     .createPool(
       params.goalHash,
-      usdcToLamports(params.stakeUsdc),
-      usdcToLamports(params.budgetUsdc),
+      solToLamports(params.stakeSol),
+      solToLamports(params.budgetSol),
       new anchor.BN(params.durationSecs),
       new anchor.BN(params.poolIdU64),
     )
     .accounts({
       pool: poolPda,
       creator: walletPubkey,
-      mint: USDC_MINT,
-      creatorTokenAccount,
-      poolVault: vaultPda,
-      tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
@@ -297,15 +239,12 @@ export async function onChainJoinPool(params: {
 }): Promise<string> {
   const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
   const poolPda = parsePublicKey(params.poolPda, "Pool address");
-  const vaultPda = getVaultPda(poolPda);
   const participantPda = getParticipantPda(poolPda, walletPubkey);
-  const participantTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
 
   const joinState = await preflightJoinPool({
     walletPubkey,
     poolPda,
     participantPda,
-    participantTokenAccount,
   });
   if (joinState === "already-joined") return "already-joined-on-chain";
 
@@ -316,9 +255,6 @@ export async function onChainJoinPool(params: {
       pool: poolPda,
       participant: participantPda,
       participantWallet: walletPubkey,
-      participantTokenAccount,
-      poolVault: vaultPda,
-      tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
@@ -334,31 +270,26 @@ export async function onChainSettlePool(params: {
 }): Promise<string> {
   const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
   const poolPda = parsePublicKey(params.poolPda, "Pool address");
-  const vaultPda = getVaultPda(poolPda);
 
   const program = getProgram(walletPubkey);
   const tx = await program.methods
     .settlePool()
     .accounts({
       pool: poolPda,
-      poolVault: vaultPda,
-      tokenProgram: TOKEN_PROGRAM_ID,
     })
     .transaction();
 
   return buildAndSend(tx, walletPubkey);
 }
 
-/** Winner calls this to pull USDC to their wallet */
+/** Winner calls this to pull SOL to their wallet */
 export async function onChainClaim(params: {
   walletAddress: string;
   poolPda: string;
 }): Promise<string> {
   const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
   const poolPda = parsePublicKey(params.poolPda, "Pool address");
-  const vaultPda = getVaultPda(poolPda);
   const participantPda = getParticipantPda(poolPda, walletPubkey);
-  const winnerTokenAccount = getAssociatedTokenAddressSync(USDC_MINT, walletPubkey);
 
   const program = getProgram(walletPubkey);
   const tx = await program.methods
@@ -366,10 +297,7 @@ export async function onChainClaim(params: {
     .accounts({
       pool: poolPda,
       participant: participantPda,
-      poolVault: vaultPda,
-      winnerTokenAccount,
       winner: walletPubkey,
-      tokenProgram: TOKEN_PROGRAM_ID,
     })
     .transaction();
 

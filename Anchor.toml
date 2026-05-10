@@ -1,14 +1,15 @@
 [toolchain]
+anchor_version = "0.31.0"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.devnet]
-stru = "JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y"
+stru = "qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf"
 
 [programs.localnet]
-stru = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+stru = "qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf"
 
 [provider]
 cluster = "devnet"

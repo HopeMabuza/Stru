@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
 use crate::state::Pool;
 use crate::errors::StruError;
 
@@ -7,15 +6,6 @@ use crate::errors::StruError;
 pub struct SettlePool<'info> {
     #[account(mut)]
     pub pool: Account<'info, Pool>,
-
-    #[account(
-        mut,
-        seeds = [b"vault", pool.key().as_ref()],
-        bump,
-    )]
-    pub pool_vault: Account<'info, TokenAccount>,
-
-    pub token_program: Program<'info, Token>,
 }
 
 pub fn handler(ctx: Context<SettlePool>) -> Result<()> {

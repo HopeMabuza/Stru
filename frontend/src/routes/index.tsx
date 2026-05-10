@@ -25,12 +25,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Stru lets you and your friends pool USDC on a shared goal. An AI referee verifies your proof. Winners split the pot. Put your money where your mouth is.",
+          "Stru lets you and your friends pool devnet SOL on a shared goal. An AI referee verifies your proof. Winners split the pot. Put your money where your mouth is.",
       },
       { property: "og:title", content: "Stru 🤞 — Put your money where your mouth is." },
       {
         property: "og:description",
-        content: "Stake USDC on a shared goal. AI verifies your proof. Winners split the pot.",
+        content: "Stake devnet SOL on a shared goal. AI verifies your proof. Winners split the pot.",
       },
     ],
   }),
@@ -146,7 +146,7 @@ function Hero() {
         className="float-slow absolute left-[6%] top-28 hidden rotate-[-8deg] rounded-2xl border-[3px] border-ink bg-coral px-4 py-2 text-sm font-bold text-cream shadow-brutal lg:block"
         style={{ ["--r" as string]: "-8deg" }}
       >
-        +0.4 USDC yield 🌱
+        +0.004 SOL yield 🌱
       </div>
       <div
         className="float-slow absolute right-[8%] top-44 hidden rotate-[6deg] rounded-2xl border-[3px] border-ink bg-sky px-4 py-2 text-sm font-bold shadow-brutal lg:block"
@@ -158,7 +158,7 @@ function Hero() {
         className="float-slow absolute bottom-32 left-[12%] hidden rotate-[5deg] rounded-2xl border-[3px] border-ink bg-cream px-4 py-2 text-sm font-bold shadow-brutal lg:block"
         style={{ ["--r" as string]: "5deg", animationDelay: "0.6s" }}
       >
-        Pot: 240 USDC 💰
+        Pot: 2.4 SOL 💰
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 pb-32 pt-16 sm:pt-24 lg:pt-32">
@@ -187,7 +187,7 @@ function Hero() {
             is.
           </h1>
           <p className="mx-auto mt-7 max-w-2xl rounded-2xl border-[3px] border-ink bg-cream/90 px-5 py-4 text-lg text-foreground/85 shadow-brutal-sm sm:text-xl">
-            Stru pools USDC with your friends on one shared goal. An AI referee checks your proof.
+            Stru pools devnet SOL with your friends on one shared goal. An AI referee checks your proof.
             Whoever shows up splits the pot — including the slackers' money. 🤞
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -234,7 +234,7 @@ function Hero() {
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {[
-                { label: "Pot", value: "240 USDC", icon: Coins },
+                { label: "Pot", value: "2.4 SOL", icon: Coins },
                 { label: "Yield", value: "+0.42", icon: Sparkles },
                 { label: "Players", value: "6", icon: Users },
                 { label: "On track", value: "4 / 6", icon: Trophy },
@@ -283,7 +283,7 @@ function HowItWorks() {
       n: "01",
       icon: Users,
       title: "Rally the group",
-      body: "Invite your friends, agree on one goal. Everyone stakes the same amount of USDC into a shared escrow.",
+      body: "Invite your friends, agree on one goal. Everyone stakes the same amount of devnet SOL into a shared escrow.",
       color: "bg-lime",
     },
     {
@@ -418,7 +418,7 @@ function Referee() {
                 as session <span className="font-mono text-xs text-cream">7 / 12</span>.
               </p>
               <div className="mt-3 flex items-center justify-between border-t border-cream/10 pt-3 text-[11px] text-cream/50">
-                <span>x402 fee · 0.02 USDC</span>
+                <span>x402 fee · 0.0002 SOL</span>
                 <span className="font-mono">conf 0.94</span>
               </div>
             </div>
@@ -465,7 +465,7 @@ function Mechanic() {
             Efficient verification = <span className="font-serif italic">richer winners.</span>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-foreground/75">
-            Every AI check costs a tiny USDC fee, drawn from the pool's verification budget. Spam
+            Every AI check costs a tiny SOL fee, drawn from the pool's verification budget. Spam
             bad proof and you're literally burning your friends' money. Whatever the pool doesn't
             spend rolls into the final payout.
           </p>
@@ -474,9 +474,9 @@ function Mechanic() {
         <div className="mt-14 grid gap-5 md:grid-cols-3">
           <div className="rounded-2xl border-2 border-ink bg-cream p-6 shadow-brutal">
             <div className="font-display text-5xl font-extrabold">240</div>
-            <div className="mt-1 text-xs font-bold uppercase tracking-wider">USDC staked</div>
+            <div className="mt-1 text-xs font-bold uppercase tracking-wider">SOL staked</div>
             <p className="mt-3 text-sm text-foreground/70">
-              Six friends, 40 USDC each. Locked in escrow on Solana while the timer runs.
+              Six friends, 0.4 SOL each. Locked in escrow on Solana while the timer runs.
             </p>
           </div>
           <div className="rounded-2xl border-2 border-ink bg-card p-6 shadow-brutal">
@@ -502,7 +502,7 @@ function Mechanic() {
               <div className="text-xs font-bold uppercase tracking-wider text-lime">
                 Projected payout · per winner
               </div>
-              <div className="mt-1 font-display text-4xl font-extrabold">~ 59.83 USDC</div>
+              <div className="mt-1 font-display text-4xl font-extrabold">~ 0.5983 SOL</div>
             </div>
             <div className="text-xs text-cream/60">
               Assuming 4/6 finish · stakes + bonus pool + forfeits − verification fees
@@ -526,7 +526,7 @@ function FAQ() {
     },
     {
       q: "Do I need to know crypto?",
-      a: "Connect a wallet, fund it with USDC, that's it. The contract handles the escrow, yield, and payout. You just need to actually do the thing.",
+      a: "Connect a wallet, fund it with devnet SOL, that's it. The contract handles the escrow, yield, and payout. You just need to actually do the thing.",
     },
     {
       q: "What chains does it support?",

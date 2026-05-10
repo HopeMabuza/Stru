@@ -26,7 +26,7 @@ function useCountdown(deadlineIso: string) {
   return { ms, d, h, m, s, expired: ms === 0 };
 }
 
-function formatUsdc(value: number) {
+function formatSol(value: number) {
   return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
 }
 
@@ -85,8 +85,8 @@ export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) 
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="Pot" value={`${formatUsdc(pot)} USDC`} icon={Coins} />
-        <Stat label="Stake" value={`${formatUsdc(pool.stake_amount)} USDC`} icon={Coins} />
+        <Stat label="Pot" value={`${formatSol(pot)} SOL`} icon={Coins} />
+        <Stat label="Stake" value={`${formatSol(pool.stake_amount)} SOL`} icon={Coins} />
         <Stat label="Players" value={`${participants.length}`} icon={Users} />
         <Stat label="Completed" value={`${progress}%`} icon={Trophy} />
       </div>
@@ -131,7 +131,7 @@ export function PoolDashboard({ pool, participants, wallet, onChanged }: Props) 
               ? "Connect Phantom to join"
               : joining
                 ? "Joining..."
-                : `Join & stake ${formatUsdc(pool.stake_amount)} USDC`}
+                : `Join & stake ${formatSol(pool.stake_amount)} SOL`}
           </Button>
         </div>
       )}

@@ -177,8 +177,8 @@ export const api = {
     return request<{ ok: boolean }>(`/pool/${id}/settle`, { method: "POST" });
   },
 
-  faucetUsdc(wallet: string): Promise<{ success: boolean; amount: number }> {
-    return request("/faucet/usdc", {
+  faucetSol(wallet: string): Promise<{ success: boolean; amount: number; signature: string }> {
+    return request("/faucet/sol", {
       method: "POST",
       body: JSON.stringify({ wallet }),
     });

@@ -1,5 +1,5 @@
 {
-  "address": "JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y",
+  "address": "qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf",
   "metadata": {
     "name": "stru",
     "version": "0.1.0",
@@ -56,38 +56,9 @@
           }
         },
         {
-          "name": "pool_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pool"
-              }
-            ]
-          }
-        },
-        {
-          "name": "winner_token_account",
-          "writable": true
-        },
-        {
           "name": "winner",
+          "writable": true,
           "signer": true
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
@@ -134,48 +105,6 @@
           "name": "creator",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "mint",
-          "docs": [
-            "USDC mint"
-          ]
-        },
-        {
-          "name": "creator_token_account",
-          "docs": [
-            "Creator's USDC token account (source)"
-          ],
-          "writable": true
-        },
-        {
-          "name": "pool_vault",
-          "docs": [
-            "Pool vault — holds all staked USDC"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pool"
-              }
-            ]
-          }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "system_program",
@@ -267,36 +196,6 @@
           "name": "participant_wallet",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "participant_token_account",
-          "writable": true
-        },
-        {
-          "name": "pool_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pool"
-              }
-            ]
-          }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "system_program",
@@ -418,32 +317,6 @@
         {
           "name": "pool",
           "writable": true
-        },
-        {
-          "name": "pool_vault",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "pool"
-              }
-            ]
-          }
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
@@ -545,6 +418,16 @@
       "code": 6007,
       "name": "NoWinners",
       "msg": "No winners in this pool"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientEscrowBalance",
+      "msg": "Pool escrow does not have enough SOL for this payout"
+    },
+    {
+      "code": 6009,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
     }
   ],
   "types": [

@@ -6,7 +6,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y");
+declare_id!("qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf");
 
 // Oracle keypair pubkey (HyVe1fm8c35hoGCR6ZR9PjtLN9pahQ2EAZpbz1oh74ao)
 pub const ORACLE_PUBKEY: Pubkey = Pubkey::new_from_array([

@@ -128,7 +128,7 @@ function DashboardPage() {
               </div>
               <div className="mt-1 font-display text-xl font-extrabold">{p.goal_text}</div>
               <div className="mt-2 flex justify-between text-sm text-foreground/70">
-                <span>{p.stake_amount} USDC stake</span>
+                <span>{p.stake_amount} SOL stake</span>
                 <span>ends {formatDeadline(p.deadline)}</span>
               </div>
             </Link>

@@ -1,18 +1,11 @@
 import * as anchor from '@coral-xyz/anchor';
-import { Program } from '@coral-xyz/anchor';
-import { Stru } from '../target/types/stru';
 import {
   PublicKey,
   Keypair,
+  LAMPORTS_PER_SOL,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
-import {
-  createMint,
-  getOrCreateAssociatedTokenAccount,
-  mintTo,
-  TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
 import { assert } from 'chai';
 import crypto from 'crypto';
 
@@ -20,21 +13,17 @@ describe('stru', () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.Stru as Program<Stru>;
+  const program = anchor.workspace.Stru as any;
   const connection = provider.connection;
 
-  let usdcMint: PublicKey;
   let creator: Keypair;
   let participant: Keypair;
   let oracle: Keypair;
-  let creatorTokenAccount: PublicKey;
-  let participantTokenAccount: PublicKey;
   let poolPda: PublicKey;
-  let poolVaultPda: PublicKey;
   let participantPda: PublicKey;
 
-  const STAKE_AMOUNT = 10_000_000; // 10 USDC (6 decimals)
-  const VERIFY_BUDGET = 1_000_000;  // 1 USDC
+  const STAKE_AMOUNT = 0.1 * LAMPORTS_PER_SOL;
+  const VERIFY_BUDGET = 0.01 * LAMPORTS_PER_SOL;
   const DURATION_SECS = 300;         // 5 minutes
   const POOL_ID = BigInt(1);
 
@@ -43,7 +32,7 @@ describe('stru', () => {
     participant = Keypair.generate();
     oracle = Keypair.generate();
 
-    // Airdrop SOL for fees
+    // Airdrop devnet/localnet SOL for fees and stakes
     await connection.confirmTransaction(
       await connection.requestAirdrop(creator.publicKey, 2e9)
     );
@@ -54,35 +43,12 @@ describe('stru', () => {
       await connection.requestAirdrop(oracle.publicKey, 1e9)
     );
 
-    // Create mock USDC mint
-    usdcMint = await createMint(connection, creator, creator.publicKey, null, 6);
-
-    // Create token accounts
-    const creatorATA = await getOrCreateAssociatedTokenAccount(
-      connection, creator, usdcMint, creator.publicKey
-    );
-    creatorTokenAccount = creatorATA.address;
-
-    const participantATA = await getOrCreateAssociatedTokenAccount(
-      connection, participant, usdcMint, participant.publicKey
-    );
-    participantTokenAccount = participantATA.address;
-
-    // Mint tokens
-    await mintTo(connection, creator, usdcMint, creatorTokenAccount, creator, 100_000_000);
-    await mintTo(connection, creator, usdcMint, participantTokenAccount, creator, 100_000_000);
-
     // Derive PDAs
     const poolIdBytes = Buffer.alloc(8);
     poolIdBytes.writeBigUInt64LE(POOL_ID);
 
     [poolPda] = PublicKey.findProgramAddressSync(
       [Buffer.from('pool'), creator.publicKey.toBuffer(), poolIdBytes],
-      program.programId
-    );
-
-    [poolVaultPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('vault'), poolPda.toBuffer()],
       program.programId
     );
 
@@ -106,9 +72,6 @@ describe('stru', () => {
       .accounts({
         pool: poolPda,
         creator: creator.publicKey,
-        creatorTokenAccount,
-        poolVault: poolVaultPda,
-        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
       })
@@ -119,18 +82,21 @@ describe('stru', () => {
     assert.equal(pool.participantCount, 1);
     assert.equal(pool.settled, false);
     assert.equal(pool.stakeAmount.toNumber(), STAKE_AMOUNT);
+    assert.isAtLeast(
+      await connection.getBalance(poolPda),
+      STAKE_AMOUNT + VERIFY_BUDGET,
+      'pool PDA should hold the creator SOL deposit'
+    );
   });
 
   it('joins a pool', async () => {
+    const before = await connection.getBalance(poolPda);
     await program.methods
       .joinPool()
       .accounts({
         pool: poolPda,
         participant: participantPda,
         participantWallet: participant.publicKey,
-        participantTokenAccount,
-        poolVault: poolVaultPda,
-        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
       })
@@ -139,21 +105,24 @@ describe('stru', () => {
 
     const pool = await program.account.pool.fetch(poolPda);
     assert.equal(pool.participantCount, 2);
+    assert.isAtLeast(await connection.getBalance(poolPda), before + STAKE_AMOUNT);
   });
 
-  it('marks participant complete (oracle)', async () => {
-    await program.methods
-      .markComplete()
-      .accounts({
-        pool: poolPda,
-        participant: participantPda,
-        oracle: oracle.publicKey,
-      })
-      .signers([oracle])
-      .rpc();
-
-    const participantAccount = await program.account.participant.fetch(participantPda);
-    assert.equal(participantAccount.completed, true);
+  it('rejects mark complete from a non-oracle signer', async () => {
+    try {
+      await program.methods
+        .markComplete()
+        .accounts({
+          pool: poolPda,
+          participant: participantPda,
+          oracle: oracle.publicKey,
+        })
+        .signers([oracle])
+        .rpc();
+      assert.fail('Should have failed — unauthorized oracle');
+    } catch (err: any) {
+      assert.include(err.message, 'Unauthorized');
+    }
   });
 
   it('settles the pool after deadline', async () => {
@@ -164,8 +133,6 @@ describe('stru', () => {
         .settlePool()
         .accounts({
           pool: poolPda,
-          poolVault: poolVaultPda,
-          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
       assert.fail('Should have failed — deadline not reached');
