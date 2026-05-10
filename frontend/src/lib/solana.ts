@@ -1,23 +1,22 @@
-import "./browser-polyfills";
-
-import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  Transaction,
-} from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
 import IDL from "./stru_idl.json";
+
+type Web3Module = typeof import("@solana/web3.js");
+type AnchorModule = typeof import("@coral-xyz/anchor");
+type PublicKey = import("@solana/web3.js").PublicKey;
+type Transaction = import("@solana/web3.js").Transaction;
+
+interface SolanaRuntime {
+  web3: Web3Module;
+  anchor: AnchorModule;
+  connection: import("@solana/web3.js").Connection;
+  programId: PublicKey;
+}
 
 function envOrFallback(value: unknown, fallback: string): string {
   const raw = typeof value === "string" ? value.trim() : "";
   return raw || fallback;
 }
 
-const PROGRAM_ID = new PublicKey(
-  envOrFallback(import.meta.env.VITE_PROGRAM_ID, "qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf"),
-);
 const SOLANA_RPC_URL = envOrFallback(
   import.meta.env.VITE_SOLANA_RPC_URL,
   "https://api.devnet.solana.com",
@@ -28,9 +27,25 @@ const MIN_CREATE_SOL_LAMPORTS = 20_000_000;
 const MIN_JOIN_SOL_LAMPORTS = 5_000_000;
 const textEncoder = new TextEncoder();
 
-export const connection = new Connection(SOLANA_RPC_URL, "confirmed");
+let runtimePromise: Promise<SolanaRuntime> | null = null;
 
-function parsePublicKey(value: string, label: string): PublicKey {
+async function loadSolana(): Promise<SolanaRuntime> {
+  runtimePromise ??= (async () => {
+    await import("./browser-polyfills");
+    const [web3, anchor] = await Promise.all([
+      import("@solana/web3.js"),
+      import("@coral-xyz/anchor"),
+    ]);
+    const programId = new web3.PublicKey(
+      envOrFallback(import.meta.env.VITE_PROGRAM_ID, "qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf"),
+    );
+    const connection = new web3.Connection(SOLANA_RPC_URL, "confirmed");
+    return { web3, anchor, connection, programId };
+  })();
+  return runtimePromise;
+}
+
+function parsePublicKey(web3: Web3Module, value: string, label: string): PublicKey {
   const normalized = value?.trim();
 
   if (!normalized) {
@@ -44,33 +59,37 @@ function parsePublicKey(value: string, label: string): PublicKey {
   }
 
   try {
-    return new PublicKey(normalized);
+    return new web3.PublicKey(normalized);
   } catch {
     throw new Error(`${label} is invalid. Expected a base58 Solana address.`);
   }
 }
 
-function getProgram(walletPubkey: PublicKey) {
+function getProgram(runtime: SolanaRuntime, walletPubkey: PublicKey) {
   const wallet = {
-    publicKey: new PublicKey("FpHgmLScZgcsdduxoZbwXnofu5Ee5kpZRcw8r6Yp8721"),
+    publicKey: walletPubkey,
     signTransaction: async <T extends Transaction>(tx: T) => tx,
     signAllTransactions: async <T extends Transaction>(txs: T[]) => txs,
   };
-  const provider = new anchor.AnchorProvider(connection, wallet as anchor.Wallet, {
+  const provider = new runtime.anchor.AnchorProvider(
+    runtime.connection,
+    wallet as import("@coral-xyz/anchor").Wallet,
+    {
     commitment: "confirmed",
-  });
-  return new anchor.Program(IDL as unknown as anchor.Idl, provider);
+    },
+  );
+  return new runtime.anchor.Program(IDL as unknown as import("@coral-xyz/anchor").Idl, provider);
 }
 
-function getParticipantPda(poolPda: PublicKey, wallet: PublicKey): PublicKey {
-  const [pda] = PublicKey.findProgramAddressSync(
+function getParticipantPda(runtime: SolanaRuntime, poolPda: PublicKey, wallet: PublicKey): PublicKey {
+  const [pda] = runtime.web3.PublicKey.findProgramAddressSync(
     [textEncoder.encode("participant"), poolPda.toBuffer(), wallet.toBuffer()],
-    PROGRAM_ID,
+    runtime.programId,
   );
   return pda;
 }
 
-function solToLamports(sol: number): anchor.BN {
+function solToLamports(anchor: AnchorModule, sol: number): import("@coral-xyz/anchor").BN {
   return new anchor.BN(Math.round(sol * 10 ** SOL_DECIMALS));
 }
 
@@ -107,12 +126,12 @@ function simulationMessage(logs?: string[] | null): string | null {
   return null;
 }
 
-async function preflightCreatePool(params: {
+async function preflightCreatePool(runtime: SolanaRuntime, params: {
   walletPubkey: PublicKey;
   stakeSol: number;
   budgetSol: number;
 }): Promise<void> {
-  const solBalance = await connection.getBalance(params.walletPubkey, "confirmed");
+  const solBalance = await runtime.connection.getBalance(params.walletPubkey, "confirmed");
   const totalRequired = solToLamportsBigInt(params.stakeSol + params.budgetSol);
   const minimumBalance = totalRequired + BigInt(MIN_CREATE_SOL_LAMPORTS);
 
@@ -124,15 +143,15 @@ async function preflightCreatePool(params: {
   }
 }
 
-async function preflightJoinPool(params: {
+async function preflightJoinPool(runtime: SolanaRuntime, params: {
   walletPubkey: PublicKey;
   poolPda: PublicKey;
   participantPda: PublicKey;
 }): Promise<"needs-join" | "already-joined"> {
   const [solBalance, poolAccount, participantAccount] = await Promise.all([
-    connection.getBalance(params.walletPubkey, "confirmed"),
-    connection.getAccountInfo(params.poolPda, "confirmed"),
-    connection.getAccountInfo(params.participantPda, "confirmed"),
+    runtime.connection.getBalance(params.walletPubkey, "confirmed"),
+    runtime.connection.getAccountInfo(params.poolPda, "confirmed"),
+    runtime.connection.getAccountInfo(params.participantPda, "confirmed"),
   ]);
 
   if (!poolAccount) {
@@ -165,14 +184,11 @@ function getPhantom() {
   };
 }
 
-async function buildAndSend(tx: Transaction, walletPubkey: PublicKey): Promise<string> {
-  const { blockhash } = await connection.getLatestBlockhash();
+async function buildAndSend(runtime: SolanaRuntime, tx: Transaction, walletPubkey: PublicKey): Promise<string> {
+  const { blockhash } = await runtime.connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = walletPubkey;
-  const simulation = await connection.simulateTransaction(tx, {
-    commitment: "confirmed",
-    sigVerify: false,
-  });
+  const simulation = await runtime.connection.simulateTransaction(tx);
   if (simulation.value.err) {
     throw new Error(
       simulationMessage(simulation.value.logs) ??
@@ -182,7 +198,7 @@ async function buildAndSend(tx: Transaction, walletPubkey: PublicKey): Promise<s
   const phantom = getPhantom();
   try {
     const { signature } = await phantom.signAndSendTransaction(tx);
-    await connection.confirmTransaction(signature, "confirmed");
+    await runtime.connection.confirmTransaction(signature, "confirmed");
     return signature;
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
@@ -205,33 +221,34 @@ export async function onChainCreatePool(params: {
   durationSecs: number;
   poolIdU64: number;
 }): Promise<string> {
-  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
-  const poolPda = parsePublicKey(params.poolPda, "Pool address");
+  const runtime = await loadSolana();
+  const walletPubkey = parsePublicKey(runtime.web3, params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(runtime.web3, params.poolPda, "Pool address");
 
-  await preflightCreatePool({
+  await preflightCreatePool(runtime, {
     walletPubkey,
     stakeSol: params.stakeSol,
     budgetSol: params.budgetSol,
   });
 
-  const program = getProgram(walletPubkey);
+  const program = getProgram(runtime, walletPubkey);
   const tx = await program.methods
     .createPool(
       params.goalHash,
-      solToLamports(params.stakeSol),
-      solToLamports(params.budgetSol),
-      new anchor.BN(params.durationSecs),
-      new anchor.BN(params.poolIdU64),
+      solToLamports(runtime.anchor, params.stakeSol),
+      solToLamports(runtime.anchor, params.budgetSol),
+      new runtime.anchor.BN(params.durationSecs),
+      new runtime.anchor.BN(params.poolIdU64),
     )
     .accounts({
       pool: poolPda,
       creator: walletPubkey,
-      systemProgram: SystemProgram.programId,
-      rent: SYSVAR_RENT_PUBKEY,
+      systemProgram: runtime.web3.SystemProgram.programId,
+      rent: runtime.web3.SYSVAR_RENT_PUBKEY,
     })
     .transaction();
 
-  return buildAndSend(tx, walletPubkey);
+  return buildAndSend(runtime, tx, walletPubkey);
 }
 
 /** Called by PoolDashboard.tsx join() before hitting the backend */
@@ -239,30 +256,31 @@ export async function onChainJoinPool(params: {
   walletAddress: string;
   poolPda: string;
 }): Promise<string> {
-  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
-  const poolPda = parsePublicKey(params.poolPda, "Pool address");
-  const participantPda = getParticipantPda(poolPda, walletPubkey);
+  const runtime = await loadSolana();
+  const walletPubkey = parsePublicKey(runtime.web3, params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(runtime.web3, params.poolPda, "Pool address");
+  const participantPda = getParticipantPda(runtime, poolPda, walletPubkey);
 
-  const joinState = await preflightJoinPool({
+  const joinState = await preflightJoinPool(runtime, {
     walletPubkey,
     poolPda,
     participantPda,
   });
   if (joinState === "already-joined") return "already-joined-on-chain";
 
-  const program = getProgram(walletPubkey);
+  const program = getProgram(runtime, walletPubkey);
   const tx = await program.methods
     .joinPool()
     .accounts({
       pool: poolPda,
       participant: participantPda,
       participantWallet: walletPubkey,
-      systemProgram: SystemProgram.programId,
-      rent: SYSVAR_RENT_PUBKEY,
+      systemProgram: runtime.web3.SystemProgram.programId,
+      rent: runtime.web3.SYSVAR_RENT_PUBKEY,
     })
     .transaction();
 
-  return buildAndSend(tx, walletPubkey);
+  return buildAndSend(runtime, tx, walletPubkey);
 }
 
 /** Permissionless — anyone can call after deadline. Frontend calls this then POST /pool/:id/settle */
@@ -270,10 +288,11 @@ export async function onChainSettlePool(params: {
   walletAddress: string;
   poolPda: string;
 }): Promise<string> {
-  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
-  const poolPda = parsePublicKey(params.poolPda, "Pool address");
+  const runtime = await loadSolana();
+  const walletPubkey = parsePublicKey(runtime.web3, params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(runtime.web3, params.poolPda, "Pool address");
 
-  const program = getProgram(walletPubkey);
+  const program = getProgram(runtime, walletPubkey);
   const tx = await program.methods
     .settlePool()
     .accounts({
@@ -281,7 +300,7 @@ export async function onChainSettlePool(params: {
     })
     .transaction();
 
-  return buildAndSend(tx, walletPubkey);
+  return buildAndSend(runtime, tx, walletPubkey);
 }
 
 /** Winner calls this to pull SOL to their wallet */
@@ -289,11 +308,12 @@ export async function onChainClaim(params: {
   walletAddress: string;
   poolPda: string;
 }): Promise<string> {
-  const walletPubkey = parsePublicKey(params.walletAddress, "Wallet address");
-  const poolPda = parsePublicKey(params.poolPda, "Pool address");
-  const participantPda = getParticipantPda(poolPda, walletPubkey);
+  const runtime = await loadSolana();
+  const walletPubkey = parsePublicKey(runtime.web3, params.walletAddress, "Wallet address");
+  const poolPda = parsePublicKey(runtime.web3, params.poolPda, "Pool address");
+  const participantPda = getParticipantPda(runtime, poolPda, walletPubkey);
 
-  const program = getProgram(walletPubkey);
+  const program = getProgram(runtime, walletPubkey);
   const tx = await program.methods
     .claim()
     .accounts({
@@ -303,5 +323,5 @@ export async function onChainClaim(params: {
     })
     .transaction();
 
-  return buildAndSend(tx, walletPubkey);
+  return buildAndSend(runtime, tx, walletPubkey);
 }
