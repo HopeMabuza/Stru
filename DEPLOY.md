@@ -11,7 +11,7 @@ The Stru Anchor program has been successfully compiled and deployed to the **Sol
 | Field | Value |
 |---|---|
 | **Network** | Solana Devnet |
-| **Program ID** | `JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y` |
+| **Program ID** | `qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf` |
 | **IDL Metadata Account** | `7CDqPN43KWMgFR3pbBT8RzDpZUsHKNp9XeWRbLce8QLU` |
 | **Upgrade Authority** | Oracle keypair (`keypairs/oracle.json`) |
 | **Oracle Pubkey** | `HyVe1fm8c35hoGCR6ZR9PjtLN9pahQ2EAZpbz1oh74ao` |
@@ -42,4 +42,4 @@ anchor program deploy --provider.cluster devnet
 ## Verify on Explorer
 
 View the live program on Solana Explorer:
-https://explorer.solana.com/address/JBotr6E6aQvKRwR9vBzT4C3uRzVj9x3mvW7SRAe71o8Y?cluster=devnet
+https://explorer.solana.com/address/qaAZkoNtDGzZreJkdAyrg8D2TxhWtXG4D21RfuF2TBf?cluster=devnet

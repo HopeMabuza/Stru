@@ -66,6 +66,10 @@ function parsePublicKey(web3: Web3Module, value: string, label: string): PublicK
 }
 
 function getProgram(runtime: SolanaRuntime, walletPubkey: PublicKey) {
+  const idl = {
+    ...(IDL as Record<string, unknown>),
+    address: runtime.programId.toBase58(),
+  };
   const wallet = {
     publicKey: walletPubkey,
     signTransaction: async <T extends Transaction>(tx: T) => tx,
@@ -78,7 +82,7 @@ function getProgram(runtime: SolanaRuntime, walletPubkey: PublicKey) {
     commitment: "confirmed",
     },
   );
-  return new runtime.anchor.Program(IDL as unknown as import("@coral-xyz/anchor").Idl, provider);
+  return new runtime.anchor.Program(idl as unknown as import("@coral-xyz/anchor").Idl, provider);
 }
 
 function getParticipantPda(runtime: SolanaRuntime, poolPda: PublicKey, wallet: PublicKey): PublicKey {
@@ -87,6 +91,25 @@ function getParticipantPda(runtime: SolanaRuntime, poolPda: PublicKey, wallet: P
     runtime.programId,
   );
   return pda;
+}
+
+function getPoolPda(runtime: SolanaRuntime, creator: PublicKey, poolIdU64: number): PublicKey {
+  const poolIdSeed = new Uint8Array(8);
+  new DataView(poolIdSeed.buffer).setBigUint64(0, BigInt(poolIdU64), true);
+  const [pda] = runtime.web3.PublicKey.findProgramAddressSync(
+    [textEncoder.encode("pool"), creator.toBuffer(), poolIdSeed],
+    runtime.programId,
+  );
+  return pda;
+}
+
+function assertPoolPdaMatches(runtime: SolanaRuntime, actual: PublicKey, creator: PublicKey, poolIdU64: number) {
+  const expected = getPoolPda(runtime, creator, poolIdU64);
+  if (!expected.equals(actual)) {
+    throw new Error(
+      `Pool PDA mismatch. Frontend is using program ${runtime.programId.toBase58()}, but the backend returned a PDA for a different program. Update VITE_PROGRAM_ID and backend PROGRAM_ID to the same deployed address.`,
+    );
+  }
 }
 
 function solToLamports(anchor: AnchorModule, sol: number): import("@coral-xyz/anchor").BN {
@@ -224,6 +247,7 @@ export async function onChainCreatePool(params: {
   const runtime = await loadSolana();
   const walletPubkey = parsePublicKey(runtime.web3, params.walletAddress, "Wallet address");
   const poolPda = parsePublicKey(runtime.web3, params.poolPda, "Pool address");
+  assertPoolPdaMatches(runtime, poolPda, walletPubkey, params.poolIdU64);
 
   await preflightCreatePool(runtime, {
     walletPubkey,
