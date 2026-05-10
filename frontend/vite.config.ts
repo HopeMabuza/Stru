@@ -11,6 +11,11 @@ const clientNodePolyfills = perEnvironmentPlugin("client-node-polyfills", (envir
   environment.name === "client"
     ? nodePolyfills({
         include: ["buffer", "crypto", "stream", "util", "process"],
+        globals: {
+          Buffer: true,
+          global: true,
+          process: true,
+        },
         protocolImports: false,
       })
     : false,
